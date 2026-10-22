@@ -17,6 +17,8 @@ import AboutSection from "./Components/User/AboutSection";
 import CustomerReviews from "./Components/User/CustomerReviews";
 import WhyChooseUs from "./Components/User/WhyChooseUs";
 import ServiceDetails from "./Components/User/ServiceDetails";
+import Login from "./Components/Auth/Login";
+import Register from "./Components/Auth/Register";
 
 export default function App() {
   return (
@@ -31,8 +33,10 @@ export default function App() {
             <Route path="/review" element ={<CustomerReviews/>}/>
              <Route path="/contact" element ={<ContactUs/>}/>
               <Route path="/services" element ={<Services/>}/>
-              <Route path="/bokappointment" element={<BookAppointment/>}/>
+              <Route path="/bookappointment/:id" element={<BookAppointment/>}/>
               <Route path="servicedetail/:id" element={<ServiceDetails/>}/>
+              <Route path="/login" element={<Login/>}/>
+              <Route path="/register" element={<Register/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

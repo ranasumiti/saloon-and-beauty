@@ -34,9 +34,10 @@ export default function ServiceDetails(){
 
               <Link
                 to="/bokappointment"
-                className="glow-book-button"
-                state={{ service: "Facial Treatments" }}
-              >
+               className="glow-book-button"
+>
+               
+               
                
               </Link>
             </div>
@@ -71,15 +72,17 @@ export default function ServiceDetails(){
               <small>Starting From</small>
 
               <Link
-                to="/servicedetail/2"
+                 to={`/bookappointment/${id}`}
                 className="glow-book-button"
-                state={{ service: "Hair Services" }}
+                
               >
-                Book Now <span>→</span>
+             
               </Link>
             </div>
             </article>
 )}
+
+ 
     </>
   )
 }
