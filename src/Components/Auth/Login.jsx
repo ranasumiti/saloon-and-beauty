@@ -1,18 +1,45 @@
 // Components/User/Login.jsx
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const nav = useNavigate('');
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      let payload = {
+        email: email,
+        password: password,
+      }
+      const res = await Login(payload);
 
-    // Connect your backend login API here
-    setMessage("Login form submitted. Connect your login API.");
+      if (res.success) {
+        let resData = {
+          token: res.token,
+          userType: res.data?.userType,
+          name: res.data?.name,
+          email: res.data?.email
+
+        }
+
+        setData(resData)
+        alert(res.message)
+        if (res.data.userType == 1) {
+                    nav('/admin')
+                } else {
+                    nav('/customer')
+                }
+            } else {
+                alert(res.message)
+            }
+      }
+     catch (err) {
+      console.log("Something went wrong:" ,err)
+    }
   };
 
   return (
