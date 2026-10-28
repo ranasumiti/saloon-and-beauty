@@ -30,6 +30,8 @@ import ManageBeauticians from "./Components/Admin/ManageBeauticians";
 import ManageStudents from "./Components/Admin/ManageStudents";
 import AddService from "./Components/Admin/Service/AddService";
 import AddCourse from "./Components/Admin/Service/AddCourse";
+import EditService from "./Components/Admin/Service/EditService";
+import EditCourse from "./Components/Admin/Service/EditCourse";
 
 
 export default function App() {
@@ -63,8 +65,10 @@ export default function App() {
 
 <Route path="students" element={<ManageStudents />} />
 
-<Route path="Add" element={<AddService />} />
+<Route path="add" element={<AddService />} />
 <Route path="addcourse" element={<AddCourse />} />
+<Route path="editservice/:id" element={<EditService/>}/>
+<Route path="editcourse/:id" element={<EditCourse />} />
 </Route>
       </Routes>
       <ToastContainer/>

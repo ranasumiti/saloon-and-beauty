@@ -1,64 +1,353 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function ManageServices() {
+  const [services, setServices] = useState([]);
   const [search, setSearch] = useState("");
-  
+  const [category, setCategory] = useState("All");
+
+  useEffect(() => {
+    const loadServices = () => {
+      const savedServices = JSON.parse(
+        localStorage.getItem("services") || "[]"
+      );
+      setServices(savedServices);
+    };
+
+    loadServices();
+
+    window.addEventListener("focus", loadServices);
+
+    return () => {
+      window.removeEventListener("focus", loadServices);
+    };
+  }, []);
+
+  // Only categories belonging to added services
+  const categories = [
+    ...new Set(
+      services
+        .map((service) => service.category)
+        .filter(Boolean)
+    ),
+  ];
+
+  const filteredServices = services.filter((service) => {
+    const matchesSearch = (service.name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesCategory =
+      category === "All" || service.category === category;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleDelete = (id) => {
+    if (!window.confirm("Are you sure you want to delete this service?")) {
+      return;
+    }
+
+    const updatedServices = services.filter(
+      (service) => String(service.id) !== String(id)
+    );
+
+    localStorage.setItem("services", JSON.stringify(updatedServices));
+    setServices(updatedServices);
+
+    toast.success("Service deleted successfully!");
+  };
+
+  const activeServices = services.filter(
+    (service) => service.status === true
+  ).length;
 
   return (
-    <div className="services">
-      <div className="heading">
-        <div className="heading-info">
-          <p>Home / Services</p>
-          <h1>Manage Services</h1>
-          <span>Manage your salon services here.</span>
+    <div className="manage-services-page">
+      <style>{`
+        .manage-services-page {
+          padding: 28px;
+          min-height: 100vh;
+          background: #faf7f2;
+          color: #49372e;
+        }
+
+        .manage-services-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 25px;
+        }
+
+        .manage-services-header h2 {
+          margin: 0 0 8px;
+          color: #654735;
+          font-family: Georgia, serif;
+        }
+
+        .manage-services-header p {
+          margin: 0;
+          color: #88796e;
+          font-size: 14px;
+        }
+
+        .add-btn {
+          display: inline-block;
+          padding: 12px 18px;
+          background: #76543e;
+          color: white;
+          text-decoration: none;
+          border-radius: 7px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .add-btn:hover {
+          background: #5d4030;
+        }
+
+        .service-stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
+          margin-bottom: 25px;
+        }
+
+        .service-stat-card {
+          padding: 22px;
+          background: white;
+          border: 1px solid #eee5da;
+          border-radius: 12px;
+        }
+
+        .service-stat-card p {
+          margin: 0 0 12px;
+          color: #88796e;
+          font-size: 14px;
+        }
+
+        .service-stat-card h3 {
+          margin: 0;
+          color: #654735;
+          font-size: 27px;
+        }
+
+        .service-list-card {
+          padding: 22px;
+          background: white;
+          border: 1px solid #eee5da;
+          border-radius: 12px;
+        }
+
+        .service-list-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 15px;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
+        }
+
+        .service-list-top h3 {
+          margin: 0;
+          color: #654735;
+        }
+
+        .service-filters {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .service-search,
+        .service-category-filter {
+          box-sizing: border-box;
+          padding: 11px 12px;
+          border: 1px solid #e3d8cb;
+          border-radius: 7px;
+          background: white;
+          color: #49372e;
+          font-size: 14px;
+          outline: none;
+        }
+
+        .service-search {
+          width: 220px;
+          max-width: 100%;
+        }
+
+        .service-search:focus,
+        .service-category-filter:focus {
+          border-color: #ad895d;
+        }
+
+        .service-table-wrapper {
+          width: 100%;
+          overflow-x: auto;
+        }
+
+        .service-table {
+          width: 100%;
+          min-width: 650px;
+          border-collapse: collapse;
+        }
+
+        .service-table th,
+        .service-table td {
+          padding: 15px 12px;
+          border-bottom: 1px solid #f0e9e1;
+          text-align: left;
+          font-size: 14px;
+        }
+
+        .service-table th {
+          background: #fcfaf7;
+          color: #88796e;
+          font-weight: 600;
+        }
+
+        .service-status {
+          display: inline-block;
+          padding: 6px 10px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .service-status.active {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        .service-status.inactive {
+          background: #fbe9e7;
+          color: #c62828;
+        }
+
+        .service-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          padding: 8px 12px;
+          border: none;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: none;
+        }
+
+        .edit-btn {
+          background: #f3e7d8;
+          color: #654735;
+        }
+
+        .delete-btn {
+          background: #fbe9e7;
+          color: #c62828;
+        }
+
+        .empty-services {
+          padding: 35px !important;
+          color: #88796e;
+          text-align: center !important;
+        }
+
+        @media (max-width: 700px) {
+          .manage-services-page {
+            padding: 16px;
+          }
+
+          .service-stats {
+            grid-template-columns: 1fr;
+          }
+
+          .service-list-card {
+            padding: 15px;
+          }
+
+          .service-filters {
+            width: 100%;
+          }
+
+          .service-search {
+            width: 100%;
+          }
+
+          .service-category-filter {
+            flex: 1;
+            min-width: 0;
+          }
+        }
+      `}</style>
+
+      <div className="manage-services-header">
+        <div>
+          <h2>Manage Services</h2>
+          <p>Add, search and manage your salon services.</p>
         </div>
-<Link to="/admin/add" className="add-btn">
-  + Add Service
-</Link>
+
+        <Link to="/admin/add" className="add-btn">
+          + Add Service
+        </Link>
       </div>
 
-      <div className="stats">
-        <div className="stat-card">
+      <div className="service-stats">
+        <div className="service-stat-card">
           <p>Total Services</p>
-          <h2>5</h2>
+          <h3>{services.length}</h3>
         </div>
 
-        <div className="stat-card">
+        <div className="service-stat-card">
           <p>Categories</p>
-          <h2>5</h2>
+          <h3>{categories.length}</h3>
         </div>
 
-        <div className="stat-card">
+        <div className="service-stat-card">
           <p>Active Services</p>
-          <h2>5</h2>
+          <h3>{activeServices}</h3>
         </div>
       </div>
 
-      <div className="service-panel">
-        <h2>Service List</h2>
-        <p>View your available salon services.</p>
+      <div className="service-list-card">
+        <div className="service-list-top">
+          <h3>All Services</h3>
 
-        <div className="filters">
-         <input
-  type="text"
-  placeholder="Search services..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-/>
+          <div className="service-filters">
+            <input
+              className="service-search"
+              type="text"
+              placeholder="Search services..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
 
-          <select defaultValue="all">
-            <option value="all">All Categories</option>
-            <option>Skin Care</option>
-            <option>Hair Care</option>
-            <option>Makeup</option>
-            <option>Nail Care</option>
-            <option>Spa</option>
-          </select>
+            <select
+              className="service-category-filter"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="All">All Categories</option>
+
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="table-box">
-          <table>
+        <div className="service-table-wrapper">
+          <table className="service-table">
             <thead>
               <tr>
                 <th>No.</th>
@@ -66,339 +355,60 @@ export default function ManageServices() {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              <tr>
-                <td>01</td>
-                <td>Facial Treatment</td>
-                <td>Skin Care</td>
-                <td>₹1,200</td>
-                <td><span className="active">Active</span></td>
-                <td><button className="edit-btn">Edit</button></td>
-              </tr>
+              {filteredServices.length > 0 ? (
+                filteredServices.map((service, index) => (
+                  <tr key={service.id}>
+                    <td>{index + 1}</td>
+                    <td>{service.name}</td>
+                    <td>{service.category}</td>
+                    <td>₹{service.price}</td>
+                    <td>
+                      <span
+                        className={`service-status ${
+                          service.status ? "active" : "inactive"
+                        }`}
+                      >
+                        {service.status ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="service-actions">
+                        <Link
+                          to={`/admin/editservice/${service.id}`}
+                          className="edit-btn"
+                        >
+                          Edit
+                        </Link>
 
-              <tr>
-                <td>02</td>
-                <td>Hair Styling</td>
-                <td>Hair Care</td>
-                <td>₹800</td>
-                <td><span className="active">Active</span></td>
-                <td><button className="edit-btn">Edit</button></td>
-              </tr>
-
-              <tr>
-                <td>03</td>
-                <td>Bridal Makeup</td>
-                <td>Makeup</td>
-                <td>₹5,000</td>
-                <td><span className="active">Active</span></td>
-                <td><button className="edit-btn">Edit</button></td>
-              </tr>
-
-              <tr>
-                <td>04</td>
-                <td>Manicure</td>
-                <td>Nail Care</td>
-                <td>₹600</td>
-                <td><span className="active">Active</span></td>
-                <td><button className="edit-btn">Edit</button></td>
-              </tr>
-
-              <tr>
-                <td>05</td>
-                <td>Spa Therapy</td>
-                <td>Spa</td>
-                <td>₹1,500</td>
-                <td><span className="active">Active</span></td>
-                <td><button className="edit-btn">Edit</button></td>
-              </tr>
+                        <button
+                          type="button"
+                          className="delete-btn"
+                          onClick={() => handleDelete(service.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="empty-services">
+                    {services.length === 0
+                      ? "No services added yet. Click Add Service to get started."
+                      : "No services match your search or category."}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        <p className="table-hint">
-          On smaller screens, swipe horizontally to view all columns.
-        </p>
       </div>
-
-      <style>{`
-        .services {
-          width: 100%;
-          min-width: 0;
-          min-height: 100vh;
-          padding: 25px;
-          background: #f8f1e8;
-          color: #543b2d;
-          font-family: Arial, sans-serif;
-          box-sizing: border-box;
-        }
-
-        .services * {
-          box-sizing: border-box;
-        }
-
-        .heading {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 20px;
-          margin-bottom: 25px;
-        }
-
-        .heading-info {
-          min-width: 0;
-        }
-
-        .heading p {
-          color: #927f70;
-          font-size: 13px;
-          overflow-wrap: anywhere;
-        }
-
-        .heading h1 {
-          font-family: Georgia, serif;
-          font-size: clamp(24px, 3vw, 32px);
-          margin: 10px 0;
-          overflow-wrap: anywhere;
-        }
-
-        .heading span {
-          color: #8b796b;
-          font-size: 14px;
-        }
-
-        .add-btn {
-          flex-shrink: 0;
-          background: #b48a4b;
-          color: white;
-          border: none;
-          padding: 13px 18px;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 18px;
-          margin-bottom: 25px;
-        }
-
-        .stat-card,
-        .service-panel {
-          min-width: 0;
-          background: #fffdf9;
-          border: 1px solid #eadfd2;
-          border-radius: 12px;
-          padding: 22px;
-        }
-
-        .stat-card p,
-        .service-panel > p {
-          color: #8b796b;
-          font-size: 13px;
-        }
-
-        .stat-card h2 {
-          font-family: Georgia, serif;
-          font-size: 30px;
-          margin-bottom: 0;
-        }
-
-        .service-panel h2 {
-          font-family: Georgia, serif;
-          margin-top: 0;
-          overflow-wrap: anywhere;
-        }
-
-        .filters {
-          display: flex;
-          gap: 12px;
-          margin: 20px 0;
-        }
-
-        .filters input,
-        .filters select {
-          min-width: 0;
-          padding: 12px;
-          border: 1px solid #e3d3c1;
-          border-radius: 7px;
-          background: #fffdf9;
-          color: #543b2d;
-          font-size: 14px;
-        }
-
-        .filters input {
-          flex: 1;
-        }
-
-        .filters select {
-          width: 220px;
-        }
-
-        .table-box {
-          width: 100%;
-          max-width: 100%;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          border: 1px solid #eadfd2;
-          border-radius: 8px;
-        }
-
-        .table-box table {
-          width: 100%;
-          min-width: 650px;
-          border-collapse: collapse;
-          text-align: left;
-          white-space: nowrap;
-        }
-
-        .table-box th {
-          background: #f2e5d5;
-          padding: 15px;
-          font-size: 13px;
-        }
-
-        .table-box td {
-          padding: 16px 15px;
-          border-bottom: 1px solid #eadfd2;
-          font-size: 13px;
-        }
-
-        .table-box tbody tr:last-child td {
-          border-bottom: none;
-        }
-
-        .active {
-          display: inline-block;
-          color: #287447;
-          background: #e8f4e9;
-          padding: 7px 10px;
-          border-radius: 20px;
-          font-size: 12px;
-        }
-
-        .edit-btn {
-          padding: 8px 13px;
-          border: 1px solid #d8b88a;
-          background: #fffdf9;
-          color: #936727;
-          border-radius: 6px;
-          cursor: pointer;
-        }
-
-        .add-btn:hover {
-          background: #8f6938;
-        }
-
-        .edit-btn:hover {
-          background: #f5eadc;
-        }
-
-        .table-hint {
-          display: none;
-          margin-bottom: 0;
-          font-size: 12px;
-        }
-
-        @media (max-width: 1024px) {
-          .services {
-            padding: 20px;
-          }
-
-          .stats {
-            gap: 12px;
-          }
-
-          .stat-card {
-            padding: 18px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .services {
-            padding: 15px;
-          }
-
-          .heading {
-            align-items: flex-start;
-          }
-
-          .heading h1 {
-            font-size: 27px;
-          }
-
-          .stats {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .stat-card:last-child {
-            grid-column: 1 / -1;
-          }
-
-          .service-panel {
-            padding: 16px;
-          }
-
-          .table-hint {
-            display: block;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .services {
-            padding: 12px;
-          }
-
-          .heading {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 14px;
-          }
-
-          .heading h1 {
-            font-size: 25px;
-          }
-
-          .add-btn {
-            width: 100%;
-          }
-
-          .stats {
-            grid-template-columns: minmax(0, 1fr);
-            gap: 12px;
-          }
-
-          .stat-card:last-child {
-            grid-column: auto;
-          }
-
-          .stat-card {
-            padding: 16px;
-          }
-
-          .stat-card h2 {
-            font-size: 26px;
-          }
-
-          .service-panel {
-            padding: 12px;
-          }
-
-          .filters {
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .filters input,
-          .filters select {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 }
