@@ -1,8 +1,9 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Register } from "../Services/UserService";
+
 import { toast } from "react-toastify";
+import { Register } from "../Services/UserService";
 
 
 
