@@ -1,12 +1,11 @@
+// Components/User/Login.jsx
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../Services/UserService";
 
-
 export default function Login() {
-
-   const [email,setEmail]  =useState("") ;
+  const [email,setEmail]  =useState("") ;
    const [password,setPassword] =useState("");
 const nav=useNavigate("");
    const handleSubmit= async(e)=>{
@@ -37,7 +36,7 @@ localStorage.setItem("password",res.data.data.password)
 
 
 const userType =res.data.data.userType
-         }
+         
          if ( userType===1){
           toast.success("admin login")
 nav("/admin");
@@ -48,13 +47,12 @@ nav("/admin");
           toast.success("user login ")
           nav("/");
         }
-       }
+       }}
     
     catch(err){
 console.log("err")
     }
    };
-
 
   return (
     <>
@@ -108,18 +106,8 @@ console.log("err")
                 Login <span>→</span>
               </button>
 
-             
+              {message && <p>{message}</p>}
             </form>
-
-            <div className="bg-or"><span>OR</span></div>
-
-            <button
-              className="bg-google-btn"
-              type="button"
-              
-            >
-              <b>G</b> Continue with Google
-            </button>
 
             <p className="bg-switch">
               Don't have an account?
