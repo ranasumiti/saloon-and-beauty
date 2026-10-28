@@ -31,9 +31,7 @@ export default function UserHeader() {
             Register
           </Link>
 
-          <Link to="/book-appointment" className="bg-appointment-btn">
-            Book Appointment <span>→</span>
-          </Link>
+         
         </div>
       </header>
 
