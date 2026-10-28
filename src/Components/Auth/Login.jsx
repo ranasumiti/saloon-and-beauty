@@ -70,18 +70,6 @@ export default function Login() {
               {message && <p>{message}</p>}
             </form>
 
-            <div className="bg-or"><span>OR</span></div>
-
-            <button
-              className="bg-google-btn"
-              type="button"
-              onClick={() =>
-                setMessage("Google login is not connected yet.")
-              }
-            >
-              <b>G</b> Continue with Google
-            </button>
-
             <p className="bg-switch">
               Don't have an account?
               <Link to="/register"> Register here</Link>

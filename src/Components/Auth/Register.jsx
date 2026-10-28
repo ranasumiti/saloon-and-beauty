@@ -123,17 +123,6 @@ export default function Register() {
               {message && <p className="bg-reg-message">{message}</p>}
             </form>
 
-            <div className="bg-reg-or"><span>OR</span></div>
-
-            <button
-              className="bg-reg-google"
-              type="button"
-              onClick={() =>
-                setMessage("Google registration is not connected yet.")
-              }
-            >
-              <b>G</b> Continue with Google
-            </button>
 
             <p className="bg-reg-switch">
               Already have an account?
