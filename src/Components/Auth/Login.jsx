@@ -1,19 +1,60 @@
-// Components/User/Login.jsx
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../Services/UserService";
+import { toast } from "react-toastify";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+   const [email,setEmail]  =useState("") ;
+   const [password,setPassword] =useState("");
+const nav=useNavigate("");
+   const handleSubmit= async(e)=>{
+     e.preventDefault();
+    try{
 
-    // Connect your backend login API here
-    setMessage("Login form submitted. Connect your login API.");
-  };
+      const payload={
+        email:email,
+        password:password,
+      }
+       const res =await login(payload);
+       
+       if (res.data.status=== true){
+        // const resdata={
+          // ab aise lre gai taki tpjen vla error aa naye 
+        //  name: res.data.data?.name,
+        //  userType:res.data.data?.userType,
+        //  email:res.data.data?.email,
+        //  token:res.data.token,
+
+        // solution 
+       localStorage.setItem("email",res.data.data.email)
+       localStorage.setItem("name",res.data.data?.name)
+       localStorage.setItem("token",res.data.token)
+localStorage.setItem("userType",res.data.data.userType)
+localStorage.setItem("password",res.data.data.password)
+
+
+
+const userType =res.data.data.userType
+         }
+         if ( userType===1){
+          toast.success("admin login")
+nav("/admin");
+        }
+        else{
+           
+
+          toast.success("user login ")
+          nav("/");
+        }
+       }
+    
+    catch(err){
+console.log("err")
+    }
+   };
+
 
   return (
     <>
@@ -67,8 +108,18 @@ export default function Login() {
                 Login <span>→</span>
               </button>
 
-              {message && <p>{message}</p>}
+             
             </form>
+
+            <div className="bg-or"><span>OR</span></div>
+
+            <button
+              className="bg-google-btn"
+              type="button"
+              
+            >
+              <b>G</b> Continue with Google
+            </button>
 
             <p className="bg-switch">
               Don't have an account?
