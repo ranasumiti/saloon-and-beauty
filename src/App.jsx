@@ -1,6 +1,6 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { ToastContainer } from "react-toastify";
 import Home from "./Components/User/Home";
 
 import UserLayout from "./Layout/User/UserLayout";
@@ -30,6 +30,7 @@ import ManageBeauticians from "./Components/Admin/ManageBeauticians";
 import ManageStudents from "./Components/Admin/ManageStudents";
 import AddService from "./Components/Admin/Service/AddService";
 import AddCourse from "./Components/Admin/Service/AddCourse";
+import { ToastContainer } from "react-toastify";
 
 export default function App() {
   return (
@@ -66,6 +67,7 @@ export default function App() {
 <Route path="addcourse" element={<AddCourse />} />
 </Route>
       </Routes>
+      <ToastContainer/>
     </BrowserRouter>
   );
 }
