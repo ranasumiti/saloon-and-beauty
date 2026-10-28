@@ -1,40 +1,58 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Register } from "../Services/UserService";
+import { toast } from "react-toastify";
 
-export default function Register() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
 
+
+export default function Registers() {
+  const nav = useNavigate();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      setMessage("Passwords do not match!");
-      return;
-    }
+     if(password!==confirmPassword){
+  setMessage("plaese fill valid password")
+  return;
+ }
+try{
+const payload={
+  email:email,
+  phone:phone,
+  name:name,
+  password:password,
+}
+ const res=await Register(payload )
 
-    // Connect your backend registration API here
-    setMessage("Registration form submitted. Connect your register API.");
+ if(res.data.success== true){
+  toast.success("Register successful!");
+
+  nav("/login")
+ }
+ else{
+  toast.error("unsucccessfull ")
+ }
+}
+catch(err){
+  toast.error("Register email exist!");
+  console.log("error a gya",err)
+}
+  
   };
 
   return (
     <>
       <div className="bg-register-page">
         <div className="bg-register-card">
+
           <div className="bg-register-image">
             <div className="bg-reg-flower">✿</div>
             <h1>Beauty <span>&</span> Glow</h1>
@@ -42,14 +60,22 @@ export default function Register() {
               BEAUTY · CARE · CONFIDENCE
             </p>
             <div className="bg-reg-line"></div>
-            <h3>Join Our Community<br />And Start Your<br />Beauty Journey</h3>
+            <h3>
+              Join Our Community<br />
+              And Start Your<br />
+              Beauty Journey
+            </h3>
             <p className="bg-reg-note">
-              Look Good.<br />Feel Good.<br />Be Your Best ♡
+              Look Good.<br />
+              Feel Good.<br />
+              Be Your Best ♡
             </p>
           </div>
 
           <div className="bg-register-content">
-            <p className="bg-reg-small">YOUR BEAUTY JOURNEY STARTS HERE</p>
+            <p className="bg-reg-small">
+              YOUR BEAUTY JOURNEY STARTS HERE
+            </p>
             <h2>Create Account</h2>
             <p className="bg-reg-description">
               Join us to book appointments, explore services and get beauty tips.
@@ -58,53 +84,48 @@ export default function Register() {
             <form onSubmit={handleSubmit}>
               <input
                 type="text"
-                name="name"
                 placeholder="Full name"
-                value={form.name}
-                onChange={handleChange}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
                 required
               />
 
               <input
                 type="email"
-                name="email"
                 placeholder="Email address"
-                value={form.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
               />
 
               <input
                 type="tel"
-                name="phone"
                 placeholder="Phone number"
-                value={form.phone}
-                onChange={handleChange}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 autoComplete="tel"
                 required
               />
 
               <input
                 type="password"
-                name="password"
                 placeholder="Password (minimum 8 characters)"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 minLength={8}
+                autoComplete="new-password"
                 required
               />
 
               <input
                 type="password"
-                name="confirmPassword"
                 placeholder="Confirm password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 minLength={8}
+                autoComplete="new-password"
                 required
               />
 
@@ -120,9 +141,24 @@ export default function Register() {
                 Register <span>→</span>
               </button>
 
-              {message && <p className="bg-reg-message">{message}</p>}
+              {message && (
+                <p className="bg-reg-message">{message}</p>
+              )}
             </form>
 
+            <div className="bg-reg-or">
+              <span>OR</span>
+            </div>
+
+            <button
+              className="bg-reg-google"
+              type="button"
+              onClick={() =>
+                setMessage("Google registration is not connected yet.")
+              }
+            >
+              <b>G</b> Continue with Google
+            </button>
 
             <p className="bg-reg-switch">
               Already have an account?
@@ -139,20 +175,20 @@ export default function Register() {
           display: flex;
           justify-content: center;
           align-items: center;
-          background: #f3e9df;
+          background: #F8F1E8;
           font-family: Arial, sans-serif;
-          color: #35281f;
+          color: #4A342A;
         }
 
         .bg-register-card {
           width: 100%;
           max-width: 1050px;
           display: grid;
-          grid-template-columns: .85fr 1.15fr;
-          background: #fffaf4;
+          grid-template-columns: 0.85fr 1.15fr;
+          background: #FFFDF9;
           border-radius: 18px;
           overflow: hidden;
-          box-shadow: 0 15px 45px #513b281c;
+          box-shadow: 0 15px 45px #4A342A1A;
         }
 
         .bg-register-image {
@@ -161,38 +197,40 @@ export default function Register() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          color: #fff8ed;
+          color: #FFFDF9;
           background:
-            linear-gradient(#29271966, #29271970),
+            linear-gradient(#3B281E80, #3B281E80),
             url("https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=900&q=85")
             center / cover;
         }
 
         .bg-reg-flower {
           font-size: 38px;
-          color: #e5c795;
+          color: #C6A66B;
         }
 
         .bg-register-image h1 {
           font: 400 38px Georgia, serif;
           margin: 10px 0;
           text-align: center;
+          color: #FFFDF9;
         }
 
         .bg-register-image h1 span {
-          color: #e5c795;
+          color: #D4B477;
         }
 
         .bg-reg-tagline {
           font-size: 10px;
           letter-spacing: 2px;
           text-align: center;
+          color: #F5E8D3;
         }
 
         .bg-reg-line {
           width: 60px;
           height: 1px;
-          background: #e5c795;
+          background: #D4B477;
           margin: 25px 0;
         }
 
@@ -200,34 +238,37 @@ export default function Register() {
           align-self: flex-start;
           font: 400 22px/1.5 Georgia, serif;
           margin-left: 5%;
+          color: #FFFDF9;
         }
 
         .bg-reg-note {
           margin-top: auto;
           align-self: flex-start;
           font: italic 21px/1.5 Georgia, serif;
-          color: #f1d9b6;
+          color: #E8D1A5;
         }
 
         .bg-register-content {
           padding: 40px 45px;
           align-self: center;
+          background: #FFFDF9;
         }
 
         .bg-reg-small {
-          color: #7b825f;
+          color: #96764D;
           letter-spacing: 1.5px;
           font-size: 10px;
+          font-weight: 600;
         }
 
         .bg-register-content h2 {
           font: 400 36px Georgia, serif;
           margin: 10px 0;
-          color: #30231b;
+          color: #4A342A;
         }
 
         .bg-reg-description {
-          color: #756b62;
+          color: #78675B;
           line-height: 1.5;
           font-size: 14px;
           margin-bottom: 20px;
@@ -240,16 +281,25 @@ export default function Register() {
         }
 
         .bg-register-content form > input {
+          width: 100%;
+          box-sizing: border-box;
           padding: 12px 14px;
-          border: 1px solid #e0d2c4;
+          border: 1px solid #E5D6C5;
           border-radius: 9px;
-          background: #fffaf5;
+          background: #FFFCF7;
+          color: #4A342A;
           font-size: 13px;
           outline: none;
+          transition: border-color 0.25s, box-shadow 0.25s;
+        }
+
+        .bg-register-content form > input::placeholder {
+          color: #A09284;
         }
 
         .bg-register-content form > input:focus {
-          border-color: #6c7854;
+          border-color: #C6A66B;
+          box-shadow: 0 0 0 3px #C6A66B20;
         }
 
         .bg-reg-terms {
@@ -258,41 +308,52 @@ export default function Register() {
           gap: 8px;
           font-size: 12px;
           line-height: 1.6;
-          color: #6a625a;
+          color: #78675B;
           margin: 5px 0;
         }
 
         .bg-reg-terms input {
           margin-top: 4px;
-          accent-color: #6c7854;
+          accent-color: #795548;
           flex-shrink: 0;
         }
 
         .bg-reg-terms a,
         .bg-reg-switch a {
-          color: #596645;
+          color: #795548;
+          text-decoration: none;
+          font-weight: 600;
+        }
+
+        .bg-reg-terms a:hover,
+        .bg-reg-switch a:hover {
+          color: #B08B50;
+          text-decoration: underline;
         }
 
         .bg-reg-submit {
           padding: 13px;
-          border: none;
+          border: 1px solid #795548;
           border-radius: 30px;
-          background: #6c7854;
-          color: white;
+          background: #795548;
+          color: #FFFDF9;
           font: 17px Georgia, serif;
           cursor: pointer;
+          transition: background 0.25s, border-color 0.25s;
         }
 
         .bg-reg-submit:hover {
-          background: #566442;
+          background: #4A342A;
+          border-color: #4A342A;
         }
 
         .bg-reg-submit span {
           margin-left: 8px;
+          color: #E8D1A5;
         }
 
         .bg-reg-message {
-          color: #596645;
+          color: #795548;
           font-size: 12px;
           margin: 3px 0;
         }
@@ -301,7 +362,7 @@ export default function Register() {
           display: flex;
           align-items: center;
           gap: 15px;
-          color: #8a8076;
+          color: #958477;
           margin: 17px 0 12px;
           font-size: 12px;
         }
@@ -310,23 +371,29 @@ export default function Register() {
         .bg-reg-or::after {
           content: "";
           height: 1px;
-          background: #e3d7ca;
+          background: #E5D6C5;
           flex: 1;
         }
 
         .bg-reg-google {
           width: 100%;
           padding: 11px;
-          border: 1px solid #e1d4c7;
+          border: 1px solid #E0D1C0;
           border-radius: 9px;
-          background: transparent;
+          background: #FFFDF9;
           cursor: pointer;
           font-size: 13px;
-          color: #51483f;
+          color: #4A342A;
+          transition: background 0.25s, border-color 0.25s;
+        }
+
+        .bg-reg-google:hover {
+          background: #F8F1E8;
+          border-color: #C6A66B;
         }
 
         .bg-reg-google b {
-          color: #4285f4;
+          color: #4285F4;
           margin-right: 10px;
           font-size: 18px;
         }
@@ -334,11 +401,15 @@ export default function Register() {
         .bg-reg-switch {
           margin-top: 22px;
           text-align: center;
-          color: #756b62;
+          color: #78675B;
           font-size: 12px;
         }
 
         @media (max-width: 700px) {
+          .bg-register-page {
+            padding: 18px 12px;
+          }
+
           .bg-register-card {
             grid-template-columns: 1fr;
           }
@@ -359,6 +430,25 @@ export default function Register() {
 
           .bg-register-content {
             padding: 32px 24px;
+          }
+
+          .bg-register-content h2 {
+            font-size: 32px;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .bg-register-content {
+            padding: 28px 18px;
+          }
+
+          .bg-register-image h1 {
+            font-size: 32px;
+          }
+
+          .bg-reg-tagline {
+            font-size: 9px;
+            letter-spacing: 1.5px;
           }
         }
       `}</style>
