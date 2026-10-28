@@ -30,7 +30,7 @@ import ManageBeauticians from "./Components/Admin/ManageBeauticians";
 import ManageStudents from "./Components/Admin/ManageStudents";
 import AddService from "./Components/Admin/Service/AddService";
 import AddCourse from "./Components/Admin/Service/AddCourse";
-import { ToastContainer } from "react-toastify";
+
 
 export default function App() {
   return (

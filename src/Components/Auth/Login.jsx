@@ -2,57 +2,46 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../Services/UserService";
+import { login, setData } from "../../services/AuthService";
 
 export default function Login() {
-  const [email,setEmail]  =useState("") ;
-   const [password,setPassword] =useState("");
-const nav=useNavigate("");
-   const handleSubmit= async(e)=>{
-     e.preventDefault();
-    try{
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-      const payload={
-        email:email,
-        password:password,
+  const nav = useNavigate();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+
+      const payload = {
+        email: email,
+        password: password,
       }
-       const res =await login(payload);
-       
-       if (res.data.status=== true){
-        // const resdata={
-          // ab aise lre gai taki tpjen vla error aa naye 
-        //  name: res.data.data?.name,
-        //  userType:res.data.data?.userType,
-        //  email:res.data.data?.email,
-        //  token:res.data.token,
+      const res = await login(payload);
 
-        // solution 
-       localStorage.setItem("email",res.data.data.email)
-       localStorage.setItem("name",res.data.data?.name)
-       localStorage.setItem("token",res.data.token)
-localStorage.setItem("userType",res.data.data.userType)
-localStorage.setItem("password",res.data.data.password)
+      if (res.success) {
+        let responseData = {
+                    token: res.token,
+                    userType: res.data?.userType,
+                    name: res.data?.name,
+                    email: res.data?.email,
+                }
 
-
-
-const userType =res.data.data.userType
-         
-         if ( userType===1){
+                setData(responseData)
+        if (userType === 1) {
           toast.success("admin login")
-nav("/admin");
+          nav("/admin");
         }
-        else{
-           
-
+        else {
           toast.success("user login ")
           nav("/");
         }
-       }}
-    
-    catch(err){
-console.log("err")
+      }
     }
-   };
+    catch (err) {
+     console.log("Something went wrong: ", err)
+    }
+  };
 
   return (
     <>
@@ -76,7 +65,8 @@ console.log("err")
               Login to book your appointments, explore services and more.
             </p>
 
-            <form onSubmit={handleSubmit}>
+            <form 
+            onSubmit={handleSubmit}>
               <input
                 type="email"
                 placeholder="Email address"
@@ -106,7 +96,7 @@ console.log("err")
                 Login <span>→</span>
               </button>
 
-              {message && <p>{message}</p>}
+              {/* {message && <p>{message}</p>} */}
             </form>
 
             <p className="bg-switch">
