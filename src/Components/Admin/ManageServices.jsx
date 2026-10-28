@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function ManageServices() {
+  const [search, setSearch] = useState("");
+  
+
   return (
     <div className="services">
       <div className="heading">
@@ -36,7 +40,12 @@ export default function ManageServices() {
         <p>View your available salon services.</p>
 
         <div className="filters">
-          <input type="text" placeholder="Search services..." />
+         <input
+  type="text"
+  placeholder="Search services..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+/>
 
           <select defaultValue="all">
             <option value="all">All Categories</option>
