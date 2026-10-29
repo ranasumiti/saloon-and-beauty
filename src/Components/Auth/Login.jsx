@@ -49,9 +49,14 @@ export default function Login() {
       toast.error(res.message || "Login failed");
     }
     }
-    catch (err) {
-     console.log("Something went wrong: ", err)
-    }
+   catch (err) {
+  console.log("Login error:", err);
+  console.log("Backend response:", err.response?.data);
+
+  toast.error(
+    err.response?.data?.message || err.message || "Login failed"
+  );
+}
   };
 
   return (

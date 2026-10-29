@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import {Register} from "../../services/AuthService"
 
 
 
@@ -19,7 +20,7 @@ export default function Registers() {
     e.preventDefault();
 
      if(password!==confirmPassword){
-  setMessage("plaese fill valid password")
+  setMessage("please fill valid password")
   return;
  }
 try{
@@ -30,8 +31,8 @@ const payload={
   password:password,
 }
  const res=await Register(payload )
-
- if(res.data.success== true){
+console.log("REGISTER RESPONSE:", res);
+ if(res.success== true){
   toast.success("Register successful!");
 
   nav("/login")
@@ -40,9 +41,10 @@ const payload={
   toast.error("unsucccessfull ")
  }
 }
-catch(err){
-  toast.error("Register email exist!");
-  console.log("error a gya",err)
+catch (err) {
+  console.log("ERROR:", err);
+  console.log("BACKEND ERROR:", err.response?.data);
+  toast.error("Registration failed");
 }
   
   };
@@ -110,10 +112,10 @@ catch(err){
 
               <input
                 type="password"
-                placeholder="Password (minimum 8 characters)"
+                placeholder="Password (minimum 10 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={8}
+                minLength={/^[0-9]{10}$/}
                 autoComplete="new-password"
                 required
               />
@@ -123,7 +125,7 @@ catch(err){
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={8}
+                minLength={/^[0-9]{10}$/}
                 autoComplete="new-password"
                 required
               />
