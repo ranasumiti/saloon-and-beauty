@@ -6,6 +6,7 @@ return{
   headers:{
     Authorization:token
   }
+  
 }
 }
 export  function Addcateogry (data){

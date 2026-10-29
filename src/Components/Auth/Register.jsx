@@ -39,6 +39,7 @@ console.log("REGISTER RESPONSE:", res);
  }
  else{
   toast.error("unsucccessfull ")
+  
  }
 }
 catch (err) {

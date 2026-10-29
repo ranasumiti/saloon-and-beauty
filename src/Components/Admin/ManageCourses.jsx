@@ -1,505 +1,493 @@
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function ManageCourses() {
+  const [courses, setCourses] = useState([
+    {
+      id: 1,
+      title: "Professional Makeup Course",
+      category: "Makeup",
+      duration: "3 Months",
+      price: 15000,
+      status: "Active",
+    },
+    {
+      id: 2,
+      title: "Hair Styling Course",
+      category: "Hair",
+      duration: "2 Months",
+      price: 10000,
+      status: "Active",
+    },
+    {
+      id: 3,
+      title: "Skin Care Course",
+      category: "Skin",
+      duration: "1 Month",
+      price: 7000,
+      status: "Inactive",
+    },
+  ]);
+
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const categories = [
+    ...new Set(courses.map((item) => item.category)),
+  ];
+
+  const filteredCourses = courses.filter((item) => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(search.toLowerCase()) ||
+      item.category.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      item.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const toggleStatus = (id) => {
+    setCourses((previousCourses) =>
+      previousCourses.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status:
+                item.status === "Active" ? "Inactive" : "Active",
+            }
+          : item
+      )
+    );
+  };
+
+  const deleteCourse = (id) => {
+    if (window.confirm("Are you sure you want to delete this course?")) {
+      setCourses((previousCourses) =>
+        previousCourses.filter((item) => item.id !== id)
+      );
+    }
+  };
+
   return (
     <>
       <style>{`
-        .courses-page {
+        .manage-courses {
           width: 100%;
-          min-width: 0;
-          box-sizing: border-box;
-          background: #faf5ef;
           min-height: 100vh;
-          padding: 30px;
-          color: #4b2e1d;
+          padding: 25px;
+          box-sizing: border-box;
+          background: #faf7f2;
+          color: #49372e;
           font-family: Arial, sans-serif;
         }
 
-        .courses-page * {
-          box-sizing: border-box;
-        }
-
-        .courses-heading {
+        .course-page-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 28px;
+          flex-wrap: wrap;
           gap: 15px;
+          margin-bottom: 25px;
         }
 
-        .courses-heading h1 {
-          font-family: Georgia, serif;
-          font-size: clamp(25px, 3vw, 34px);
-          margin: 12px 0;
-          overflow-wrap: anywhere;
+        .course-page-header h2 {
+          margin: 0 0 8px;
+          font-size: 27px;
+          color: #49372e;
         }
 
-        .courses-heading p {
-          color: #806752;
+        .course-page-header p {
           margin: 0;
+          color: #88766a;
+          font-size: 14px;
         }
 
-        .add-course {
-          display: inline-block;
-          flex-shrink: 0;
-          background: #b38b4e;
+        .course-add-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px 20px;
+          background: #a77b45;
           color: white;
-          padding: 14px 22px;
-          border-radius: 8px;
           text-decoration: none;
-          border: none;
-          cursor: pointer;
-          font-size: 15px;
-          text-align: center;
+          border-radius: 7px;
+          font-size: 14px;
+          font-weight: 600;
+          transition: 0.3s;
+        }
+
+        .course-add-btn:hover {
+          background: #79552f;
+          color: white;
         }
 
         .course-stats {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 15px;
-          margin-bottom: 30px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 20px;
+          margin-bottom: 25px;
         }
 
-        .course-stat {
-          min-width: 0;
-          background: #fffdf9;
+        .course-stat-card {
           padding: 22px;
+          background: white;
+          border: 1px solid #eee3d5;
           border-radius: 12px;
-          box-shadow: 0 3px 12px #5b3b2010;
-          border: 1px solid #f0e3d5;
+          box-shadow: 0 3px 12px rgba(73, 55, 46, 0.05);
         }
 
-        .course-stat p {
-          color: #806752;
-          margin: 0 0 10px;
-          overflow-wrap: anywhere;
-        }
-
-        .course-stat h2 {
-          font-size: 30px;
-          margin: 0;
-          font-family: Georgia, serif;
-        }
-
-        .course-table-panel {
-          width: 100%;
-          min-width: 0;
-          background: #fffdf9;
-          padding: 25px;
-          border-radius: 12px;
-          border: 1px solid #f0e3d5;
-        }
-
-        .course-table-heading {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 24px;
-          flex-wrap: wrap;
-        }
-
-        .course-table-heading h2 {
-          font-family: Georgia, serif;
-          font-size: 28px;
+        .course-stat-card h3 {
           margin: 0 0 8px;
+          color: #a77b45;
+          font-size: 29px;
         }
 
-        .course-table-heading p {
+        .course-stat-card p {
           margin: 0;
-          color: #806752;
-        }
-
-        .course-filters {
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-          min-width: 0;
-        }
-
-        .course-filters input,
-        .course-filters select {
-          min-width: 0;
-          max-width: 100%;
-          padding: 12px;
-          border: 1px solid #e5d5c3;
-          border-radius: 7px;
-          background: #fffdf9;
-          color: #4b2e1d;
+          color: #88766a;
           font-size: 14px;
         }
 
-        .course-filters input {
-          flex: 1;
-          width: 180px;
+        .course-filter-bar {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 20px;
         }
 
-        .course-filters select {
-          width: 190px;
+        .course-filter-bar input,
+        .course-filter-bar select {
+          height: 45px;
+          padding: 0 14px;
+          background: white;
+          border: 1px solid #e4d8ca;
+          border-radius: 7px;
+          outline: none;
+          color: #49372e;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+
+        .course-filter-bar input {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .course-filter-bar select {
+          width: 210px;
+          cursor: pointer;
+        }
+
+        .course-filter-bar input:focus,
+        .course-filter-bar select:focus {
+          border-color: #a77b45;
+          box-shadow: 0 0 0 3px rgba(167, 123, 69, 0.12);
         }
 
         .course-table-wrapper {
           width: 100%;
-          max-width: 100%;
           overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          border: 1px solid #e8d9c9;
-          border-radius: 8px;
+          background: white;
+          border: 1px solid #eee3d5;
+          border-radius: 12px;
+          box-shadow: 0 3px 12px rgba(73, 55, 46, 0.05);
         }
 
         .course-table {
           width: 100%;
           min-width: 850px;
           border-collapse: collapse;
-          white-space: nowrap;
+          text-align: left;
+        }
+
+        .course-table thead {
+          background: #eee3d5;
         }
 
         .course-table th {
-          background: #f3e6d8;
-          color: #4b2e1d;
-          text-align: left;
-          padding: 16px 12px;
-          border: 1px solid #e8d9c9;
+          padding: 16px 15px;
+          color: #5a4232;
+          font-size: 13px;
+          font-weight: 700;
+          white-space: nowrap;
         }
 
         .course-table td {
-          padding: 15px 12px;
-          border: 1px solid #eaded1;
-          color: #44352b;
-          font-size: 14px;
-        }
-
-        .status {
-          display: inline-block;
-          padding: 7px 12px;
-          border-radius: 20px;
+          padding: 16px 15px;
+          border-bottom: 1px solid #f0e8df;
+          color: #625247;
           font-size: 13px;
+          vertical-align: middle;
         }
 
-        .active {
-          background: #e1efdf;
-          color: #286337;
+        .course-table tbody tr:last-child td {
+          border-bottom: none;
         }
 
-        .inactive {
-          background: #fde3dc;
-          color: #a53d2b;
+        .course-table tbody tr:hover {
+          background: #fdfaf6;
         }
 
-        .edit-btn,
-        .delete-btn {
-          padding: 9px 12px;
-          border-radius: 7px;
-          margin: 3px;
-          cursor: pointer;
-          background: transparent;
+        .course-status {
+          display: inline-block;
+          padding: 6px 11px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
         }
 
-        .edit-btn {
-          border: 1px solid #b38b4e;
-          color: #80551e;
+        .course-status.active {
+          background: #e8f4e9;
+          color: #347343;
         }
 
-        .delete-btn {
-          border: 1px solid #d97765;
-          color: #b33b2b;
+        .course-status.inactive {
+          background: #f5e8e4;
+          color: #a34d3f;
         }
 
-        .course-pagination {
+        .course-actions {
           display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          margin-top: 22px;
+          align-items: center;
+          gap: 7px;
           flex-wrap: wrap;
         }
 
-        .course-pagination button {
-          background: #fffdf9;
-          border: 1px solid #e5d5c3;
-          padding: 10px 15px;
-          border-radius: 6px;
-          color: #4b2e1d;
-          cursor: pointer;
-        }
-
-        .course-pagination .current-page {
-          background: #76563e;
-          color: white;
-        }
-
-        .course-table-hint {
-          display: none;
-          color: #806752;
+        .course-action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 10px;
+          border: none;
+          border-radius: 5px;
           font-size: 12px;
-          margin: 12px 0 0;
+          font-weight: 600;
+          text-decoration: none;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: 0.2s;
         }
 
-        .add-course:hover {
-          background: #8f6938;
+        .course-edit-btn {
+          background: #f4e8d7;
+          color: #78552e;
         }
 
-        .edit-btn:hover {
-          background: #f5eadc;
+        .course-edit-btn:hover {
+          background: #e8d3b8;
+          color: #593c20;
         }
 
-        .delete-btn:hover {
-          background: #fde3dc;
+        .course-toggle-btn {
+          background: #eee7dc;
+          color: #654c36;
         }
 
-        @media (max-width: 1024px) {
-          .courses-page {
-            padding: 22px;
+        .course-toggle-btn:hover {
+          background: #dfd0bb;
+        }
+
+        .course-delete-btn {
+          background: #f8e5e2;
+          color: #b13d32;
+        }
+
+        .course-delete-btn:hover {
+          background: #f0ceca;
+        }
+
+        .course-no-data {
+          text-align: center !important;
+          padding: 35px !important;
+          color: #88766a !important;
+        }
+
+        @media (max-width: 768px) {
+          .manage-courses {
+            padding: 18px;
+          }
+
+          .course-page-header h2 {
+            font-size: 23px;
           }
 
           .course-stats {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
           }
 
-          .course-stat {
-            padding: 18px;
+          .course-stat-card {
+            padding: 17px;
           }
 
-          .course-table-panel {
-            padding: 20px;
+          .course-filter-bar {
+            flex-direction: column;
+          }
+
+          .course-filter-bar select {
+            width: 100%;
           }
         }
 
-        @media (max-width: 768px) {
-          .courses-page {
-            padding: 15px;
-          }
-
-          .courses-heading {
-            align-items: flex-start;
-          }
-
-          .course-table-heading {
-            align-items: stretch;
-          }
-
-          .course-table-heading h2 {
-            font-size: 25px;
-          }
-
-          .course-filters {
-            width: 100%;
-          }
-
-          .course-filters input,
-          .course-filters select {
-            flex: 1;
-            width: 100%;
-          }
-
-          .course-table-hint {
-            display: block;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .courses-page {
+        @media (max-width: 480px) {
+          .manage-courses {
             padding: 12px;
           }
 
-          .courses-heading {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 16px;
+          .course-page-header h2 {
+            font-size: 21px;
           }
 
-          .add-course {
-            width: 100%;
+          .course-add-btn {
+            padding: 10px 13px;
+            font-size: 12px;
           }
 
           .course-stats {
-            grid-template-columns: minmax(0, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            grid-template-columns: 1fr;
           }
 
-          .course-stat {
-            padding: 16px;
-          }
-
-          .course-stat h2 {
-            font-size: 26px;
-          }
-
-          .course-table-panel {
-            padding: 12px;
-          }
-
-          .course-table-heading {
-            gap: 16px;
-          }
-
-          .course-filters {
-            flex-direction: column;
-          }
-
-          .course-filters input,
-          .course-filters select {
-            width: 100%;
-          }
-
-          .course-pagination {
-            justify-content: center;
-            gap: 5px;
-          }
-
-          .course-pagination button {
-            padding: 9px 12px;
+          .course-stat-card h3 {
+            font-size: 24px;
           }
         }
       `}</style>
 
-      <div className="courses-page">
-        <div className="courses-heading">
+      <div className="manage-courses">
+        <div className="course-page-header">
           <div>
-            <p>Home / Courses</p>
-            <h1>Manage Courses</h1>
-            <p>Add and manage your beauty courses.</p>
+            <h2>Manage Courses</h2>
+            <p>Manage your beauty academy courses here.</p>
           </div>
 
-         <Link to="/admin/addcourse" className="add-course">
-  + Add Course
-</Link>
+          <Link to="/admin/addcourse" className="course-add-btn">
+            + Add Course
+          </Link>
         </div>
 
+        {/* Course Statistics */}
         <div className="course-stats">
-          <div className="course-stat">
+          <div className="course-stat-card">
+            <h3>{courses.length}</h3>
             <p>Total Courses</p>
-            <h2>5</h2>
           </div>
-          <div className="course-stat">
-            <p>Categories</p>
-            <h2>4</h2>
-          </div>
-          <div className="course-stat">
-            <p>Students Enrolled</p>
-            <h2>48</h2>
-          </div>
-          <div className="course-stat">
+
+          <div className="course-stat-card">
+            <h3>
+              {courses.filter((item) => item.status === "Active").length}
+            </h3>
             <p>Active Courses</p>
-            <h2>3</h2>
+          </div>
+
+          <div className="course-stat-card">
+            <h3>
+              {courses.filter((item) => item.status === "Inactive").length}
+            </h3>
+            <p>Inactive Courses</p>
           </div>
         </div>
 
-        <div className="course-table-panel">
-          <div className="course-table-heading">
-            <div>
-              <h2>Course List</h2>
-              <p>View and manage all beauty courses.</p>
-            </div>
+        {/* Search and Category Filter */}
+        <div className="course-filter-bar">
+          <input
+            type="text"
+            placeholder="Search course or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-            <div className="course-filters">
-              <input type="text" placeholder="Search courses..." />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="All">All Categories</option>
 
-              <select defaultValue="all">
-                <option value="all">All Categories</option>
-                <option value="skin">Skin Care</option>
-                <option value="makeup">Makeup</option>
-                <option value="hair">Hair Care</option>
-                <option value="nail">Nail Care</option>
-              </select>
-            </div>
-          </div>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div className="course-table-wrapper">
-            <table className="course-table">
-              <thead>
+        {/* Courses Table */}
+        <div className="course-table-wrapper">
+          <table className="course-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Course Name</th>
+                <th>Category</th>
+                <th>Duration</th>
+                <th>Price (₹)</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredCourses.length > 0 ? (
+                filteredCourses.map((course) => (
+                  <tr key={course.id}>
+                    <td>{course.id}</td>
+                    <td>{course.title}</td>
+                    <td>{course.category}</td>
+                    <td>{course.duration}</td>
+                    <td>₹{course.price.toLocaleString("en-IN")}</td>
+
+                    <td>
+                      <span
+                        className={
+                          course.status === "Active"
+                            ? "course-status active"
+                            : "course-status inactive"
+                        }
+                      >
+                        {course.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="course-actions">
+                        <Link
+                          to={`/admin/editcourse/${course.id}`}
+                          className="course-action-btn course-edit-btn"
+                        >
+                          Edit
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="course-action-btn course-toggle-btn"
+                          onClick={() => toggleStatus(course.id)}
+                        >
+                          {course.status === "Active"
+                            ? "Deactivate"
+                            : "Activate"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="course-action-btn course-delete-btn"
+                          onClick={() => deleteCourse(course.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <th>No.</th>
-                  <th>Course Name</th>
-                  <th>Category</th>
-                  <th>Duration</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <td>01</td>
-                  <td>Basic Beauty Course</td>
-                  <td>Skin Care</td>
-                  <td>1 Month</td>
-                  <td>₹5,000</td>
-                  <td><span className="status active">Active</span></td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
+                  <td colSpan="7" className="course-no-data">
+                    No courses found.
                   </td>
                 </tr>
-
-                <tr>
-                  <td>02</td>
-                  <td>Advanced Makeup Course</td>
-                  <td>Makeup</td>
-                  <td>2 Months</td>
-                  <td>₹15,000</td>
-                  <td><span className="status active">Active</span></td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>03</td>
-                  <td>Hair Styling Course</td>
-                  <td>Hair Care</td>
-                  <td>1 Month</td>
-                  <td>₹8,000</td>
-                  <td><span className="status inactive">Inactive</span></td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>04</td>
-                  <td>Nail Art Course</td>
-                  <td>Nail Care</td>
-                  <td>3 Weeks</td>
-                  <td>₹7,000</td>
-                  <td><span className="status active">Active</span></td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>05</td>
-                  <td>Bridal Makeup Course</td>
-                  <td>Makeup</td>
-                  <td>2 Months</td>
-                  <td>₹18,000</td>
-                  <td><span className="status inactive">Inactive</span></td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="course-table-hint">
-            Swipe horizontally to view all course columns on mobile.
-          </p>
-
-          <div className="course-pagination">
-            <button>‹</button>
-            <button className="current-page">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>›</button>
-          </div>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
