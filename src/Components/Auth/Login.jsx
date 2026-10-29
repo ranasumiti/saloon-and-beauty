@@ -24,39 +24,40 @@ export default function Login() {
         const user = res.data?.user || res.data;
 
         let responseData = {
-                   token: res.token || user?.token,
-                    userType: res.data?.userType,
-                    name: res.data?.name,
-                    email: res.data?.email,
-                }
+          token: res.token || user?.token,
+          userType: res.data?.userType,
+          name: res.data?.name,
+          email: res.data?.email,
+        }
 
-                if (!responseData.token) {
-        toast.error("Login token not received");
-        return;
-      }
+        if (!responseData.token) {
+          window.dispatchEvent(new Event("authChanged"));
+          toast.error("Login token not received");
+          return;
+        }
 
-                setData(responseData)
-       if (Number(responseData.userType) === 1) {
-        toast.success("Admin login successful");
-        nav("/admin");
-      } 
+        setData(responseData)
+        if (Number(responseData.userType) === 1) {
+          toast.success("Admin login successful");
+          nav("/admin");
+        }
         else {
-        toast.success("User login successful");
-        nav("/");
-      }
+          toast.success("User login successful");
+          nav("/");
+        }
       }
       else {
-      toast.error(res.message || "Login failed");
+        toast.error(res.message || "Login failed");
+      }
     }
-    }
-   catch (err) {
-  console.log("Login error:", err);
-  console.log("Backend response:", err.response?.data);
+    catch (err) {
+      console.log("Login error:", err);
+      console.log("Backend response:", err.response?.data);
 
-  toast.error(
-    err.response?.data?.message || err.message || "Login failed"
-  );
-}
+      toast.error(
+        err.response?.data?.message || err.message || "Login failed"
+      );
+    }
   };
 
   return (
@@ -81,8 +82,8 @@ export default function Login() {
               Login to book your appointments, explore services and more.
             </p>
 
-            <form 
-            onSubmit={handleSubmit}>
+            <form
+              onSubmit={handleSubmit}>
               <input
                 type="email"
                 placeholder="Email address"

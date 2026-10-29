@@ -25,7 +25,7 @@ export default function HeroSection() {
           </p>
 
           <div className="glow-hero-actions">
-            <Link to="/bokappointment" className="glow-hero-primary">
+            <Link to="/bookappointment" className="glow-hero-primary">
               Book Appointment <span>→</span>
             </Link>
 

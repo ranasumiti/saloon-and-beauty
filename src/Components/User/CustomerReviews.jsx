@@ -11,7 +11,7 @@ export default function CustomerReviews() {
       try {
         // Replace this URL with your actual public reviews endpoint.
         const response = await axios.get(
-          "http://localhost:5000/api/reviews/approved"
+          "http://localhost:2000/api/reviews/approved"
         );
 
         // Supports either an array or { reviews: [...] } response.

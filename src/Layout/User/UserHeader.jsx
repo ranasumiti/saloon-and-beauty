@@ -1,6 +1,41 @@
-import { Link } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function UserHeader() {
+  const navigate = useNavigate();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("token")
+  );
+
+  useEffect(() => {
+    const updateLoginStatus = () => {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    };
+
+    // Update header when login/logout happens in this tab
+    window.addEventListener("authChanged", updateLoginStatus);
+
+    // Update header if localStorage changes in another tab
+    window.addEventListener("storage", updateLoginStatus);
+
+    return () => {
+      window.removeEventListener("authChanged", updateLoginStatus);
+      window.removeEventListener("storage", updateLoginStatus);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("name");
+
+    setIsLoggedIn(false);
+    navigate("/login");
+  };
+
   return (
     <>
       <header className="bg-header">
@@ -23,15 +58,25 @@ export default function UserHeader() {
         </nav>
 
         <div className="bg-header-actions">
-          <Link to="/login" className="bg-login-btn">
-            Login
-          </Link>
+          {isLoggedIn ? (
+            <button
+              type="button"
+              className="bg-login-btn"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link to="/login" className="bg-login-btn">
+                Login
+              </Link>
 
-          <Link to="/register" className="bg-register-btn">
-            Register
-          </Link>
-
-         
+              <Link to="/register" className="bg-register-btn">
+                Register
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -162,15 +207,17 @@ export default function UserHeader() {
           font-family: Arial, sans-serif;
           font-size: 12px;
           font-weight: 600;
-          transition: background 0.25s ease,
-                      color 0.25s ease,
-                      border-color 0.25s ease;
+          transition:
+            background 0.25s ease,
+            color 0.25s ease,
+            border-color 0.25s ease;
         }
 
         .bg-login-btn {
           color: #503b38;
           border: 1px solid #c9aa80;
           background: transparent;
+          cursor: pointer;
         }
 
         .bg-login-btn:hover {
