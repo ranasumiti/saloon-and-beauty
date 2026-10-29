@@ -1,43 +1,49 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 
 export default function ManageServices() {
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState([
+    {
+      id: 1,
+      name: "Hair Styling",
+      category: "Hair",
+      price: 1500,
+      status: true,
+    },
+    {
+      id: 2,
+      name: "Facial Treatment",
+      category: "Skin",
+      price: 2000,
+      status: true,
+    },
+    {
+      id: 3,
+      name: "Bridal Makeup",
+      category: "Makeup",
+      price: 5000,
+      status: false,
+    },
+  ]);
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
-  useEffect(() => {
-    const loadServices = () => {
-      const savedServices = JSON.parse(
-        localStorage.getItem("services") || "[]"
-      );
-      setServices(savedServices);
-    };
-
-    loadServices();
-
-    window.addEventListener("focus", loadServices);
-
-    return () => {
-      window.removeEventListener("focus", loadServices);
-    };
-  }, []);
-
-  // Only categories belonging to added services
   const categories = [
-    ...new Set(
-      services
-        .map((service) => service.category)
-        .filter(Boolean)
-    ),
+    ...new Set(services.map((service) => service.category).filter(Boolean)),
   ];
 
+  const activeServices = services.filter(
+    (service) => service.status === true
+  ).length;
+
   const filteredServices = services.filter((service) => {
-    const matchesSearch = (service.name || "")
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const searchText = search.toLowerCase().trim();
+
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchText) ||
+      service.category.toLowerCase().includes(searchText);
 
     const matchesCategory =
       category === "All" || service.category === category;
@@ -45,24 +51,23 @@ export default function ManageServices() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Are you sure you want to delete this service?")) {
-      return;
-    }
-
-    const updatedServices = services.filter(
-      (service) => String(service.id) !== String(id)
+  const toggleStatus = (id) => {
+    setServices((previous) =>
+      previous.map((service) =>
+        service.id === id
+          ? { ...service, status: !service.status }
+          : service
+      )
     );
-
-    localStorage.setItem("services", JSON.stringify(updatedServices));
-    setServices(updatedServices);
-
-    toast.success("Service deleted successfully!");
   };
 
-  const activeServices = services.filter(
-    (service) => service.status === true
-  ).length;
+  const deleteService = (id) => {
+    if (window.confirm("Are you sure you want to delete this service?")) {
+      setServices((previous) =>
+        previous.filter((service) => service.id !== id)
+      );
+    }
+  };
 
   return (
     <div className="manage-services-page">
@@ -192,7 +197,7 @@ export default function ManageServices() {
 
         .service-table {
           width: 100%;
-          min-width: 650px;
+          min-width: 850px;
           border-collapse: collapse;
         }
 
@@ -201,7 +206,7 @@ export default function ManageServices() {
           padding: 15px 12px;
           border-bottom: 1px solid #f0e9e1;
           text-align: left;
-          font-size: 14px;
+          font-size: 13px;
         }
 
         .service-table th {
@@ -231,22 +236,29 @@ export default function ManageServices() {
         .service-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 7px;
         }
 
         .edit-btn,
-        .delete-btn {
-          padding: 8px 12px;
+        .delete-btn,
+        .toggle-btn {
+          padding: 8px 10px;
           border: none;
           border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
           cursor: pointer;
           text-decoration: none;
+          white-space: nowrap;
         }
 
         .edit-btn {
           background: #f3e7d8;
+          color: #654735;
+        }
+
+        .toggle-btn {
+          background: #f7f0e7;
           color: #654735;
         }
 
@@ -366,7 +378,8 @@ export default function ManageServices() {
                     <td>{index + 1}</td>
                     <td>{service.name}</td>
                     <td>{service.category}</td>
-                    <td>₹{service.price}</td>
+                    <td>₹{service.price.toLocaleString("en-IN")}</td>
+
                     <td>
                       <span
                         className={`service-status ${
@@ -376,6 +389,7 @@ export default function ManageServices() {
                         {service.status ? "Active" : "Inactive"}
                       </span>
                     </td>
+
                     <td>
                       <div className="service-actions">
                         <Link
@@ -387,8 +401,16 @@ export default function ManageServices() {
 
                         <button
                           type="button"
+                          className="toggle-btn"
+                          onClick={() => toggleStatus(service.id)}
+                        >
+                          {service.status ? "Deactivate" : "Activate"}
+                        </button>
+
+                        <button
+                          type="button"
                           className="delete-btn"
-                          onClick={() => handleDelete(service.id)}
+                          onClick={() => deleteService(service.id)}
                         >
                           Delete
                         </button>
@@ -400,7 +422,7 @@ export default function ManageServices() {
                 <tr>
                   <td colSpan="6" className="empty-services">
                     {services.length === 0
-                      ? "No services added yet. Click Add Service to get started."
+                      ? "No services added yet."
                       : "No services match your search or category."}
                   </td>
                 </tr>

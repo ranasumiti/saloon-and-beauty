@@ -1,309 +1,236 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 
 export default function ManageCourses() {
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([
+    {
+      id: 1,
+      title: "Professional Makeup Course",
+      category: "Makeup",
+      duration: "3 Months",
+      price: 15000,
+      status: "Active",
+    },
+    {
+      id: 2,
+      title: "Hair Styling Course",
+      category: "Hair",
+      duration: "2 Months",
+      price: 10000,
+      status: "Active",
+    },
+    {
+      id: 3,
+      title: "Skin Care Course",
+      category: "Skin",
+      duration: "1 Month",
+      price: 7000,
+      status: "Inactive",
+    },
+  ]);
+
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [editId, setEditId] = useState(null);
-
-  const [editData, setEditData] = useState({
-    name: "",
-    category: "",
-    duration: "",
-    price: "",
-    status: true,
-  });
-
-  useEffect(() => {
-    const loadCourses = () => {
-      const savedCourses = JSON.parse(
-        localStorage.getItem("courses") || "[]"
-      );
-      setCourses(savedCourses);
-    };
-
-    loadCourses();
-
-    window.addEventListener("focus", loadCourses);
-
-    return () => {
-      window.removeEventListener("focus", loadCourses);
-    };
-  }, []);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categories = [
-    ...new Set(
-      courses.map((course) => course.category).filter(Boolean)
-    ),
+    ...new Set(courses.map((item) => item.category)),
   ];
 
-  const filteredCourses = courses.filter((course) => {
-    const name = course.name || course.title || "";
-
-    const matchesSearch = name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  const filteredCourses = courses.filter((item) => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(search.toLowerCase()) ||
+      item.category.toLowerCase().includes(search.toLowerCase());
 
     const matchesCategory =
-      category === "All" || course.category === category;
+      selectedCategory === "All" ||
+      item.category === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
 
-  const activeCourses = courses.filter(
-    (course) =>
-      course.status === true ||
-      course.status === "true" ||
-      course.status === "Active"
-  ).length;
-
-  const enrolledStudents = courses.reduce(
-    (total, course) =>
-      total + Number(course.studentsEnrolled || 0),
-    0
-  );
-
-  const handleEdit = (course) => {
-    setEditId(course.id);
-
-    setEditData({
-      name: course.name || course.title || "",
-      category: course.category || "",
-      duration: course.duration || "",
-      price: course.price ?? "",
-      status:
-        course.status === false ||
-        course.status === "false" ||
-        course.status === "Inactive"
-          ? false
-          : true,
-    });
-  };
-
-  const handleUpdate = (e) => {
-    e.preventDefault();
-
-    if (
-      !editData.name.trim() ||
-      !editData.category ||
-      editData.price === "" ||
-      !String(editData.duration).trim()
-    ) {
-      toast.error("Please fill all required fields.");
-      return;
-    }
-
-    const updatedCourses = courses.map((course) => {
-      if (String(course.id) === String(editId)) {
-        return {
-          ...course,
-          name: editData.name.trim(),
-          title: editData.name.trim(),
-          category: editData.category,
-          duration: editData.duration,
-          price: Number(editData.price),
-          status: editData.status,
-        };
-      }
-
-      return course;
-    });
-
-    localStorage.setItem("courses", JSON.stringify(updatedCourses));
-    setCourses(updatedCourses);
-    setEditId(null);
-
-    toast.success("Course updated successfully!");
-  };
-
-  const handleDelete = (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) {
-      return;
-    }
-
-    const updatedCourses = courses.filter(
-      (course) => String(course.id) !== String(id)
+  const toggleStatus = (id) => {
+    setCourses((previousCourses) =>
+      previousCourses.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status:
+                item.status === "Active" ? "Inactive" : "Active",
+            }
+          : item
+      )
     );
+  };
 
-    localStorage.setItem("courses", JSON.stringify(updatedCourses));
-    setCourses(updatedCourses);
-
-    if (String(editId) === String(id)) {
-      setEditId(null);
+  const deleteCourse = (id) => {
+    if (window.confirm("Are you sure you want to delete this course?")) {
+      setCourses((previousCourses) =>
+        previousCourses.filter((item) => item.id !== id)
+      );
     }
-
-    toast.success("Course deleted successfully!");
   };
 
   return (
-    <div className="courses-page">
+    <>
       <style>{`
-        .courses-page {
-          box-sizing: border-box;
+        .manage-courses {
+          width: 100%;
           min-height: 100vh;
-          padding: 28px;
-          background: #faf5ef;
-          color: #4b2e1d;
+          padding: 25px;
+          box-sizing: border-box;
+          background: #faf7f2;
+          color: #49372e;
           font-family: Arial, sans-serif;
         }
 
-        .courses-page * {
-          box-sizing: border-box;
-        }
-
-        .courses-heading {
+        .course-page-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          gap: 16px;
           flex-wrap: wrap;
-          margin-bottom: 28px;
-        }
-
-        .courses-heading h1 {
-          margin: 12px 0;
-          font-family: Georgia, serif;
-          font-size: 32px;
-        }
-
-        .courses-heading p {
-          color: #806752;
-          margin: 0;
-        }
-
-        .add-course {
-          display: inline-block;
-          padding: 13px 20px;
-          background: #b38b4e;
-          color: white;
-          text-decoration: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .add-course:hover {
-          background: #8f6938;
-        }
-
-        .course-stats {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 15px;
           margin-bottom: 25px;
         }
 
-        .course-stat {
-          min-width: 0;
-          padding: 22px;
-          background: #fffdf9;
-          border: 1px solid #f0e3d5;
-          border-radius: 12px;
-        }
-
-        .course-stat p {
-          margin: 0 0 10px;
-          color: #806752;
-          font-size: 14px;
-        }
-
-        .course-stat h2 {
-          margin: 0;
-          font-family: Georgia, serif;
-          font-size: 28px;
-        }
-
-        .course-table-panel {
-          min-width: 0;
-          padding: 24px;
-          background: #fffdf9;
-          border: 1px solid #f0e3d5;
-          border-radius: 12px;
-        }
-
-        .course-table-heading {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-          flex-wrap: wrap;
-          margin-bottom: 22px;
-        }
-
-        .course-table-heading h2 {
+        .course-page-header h2 {
           margin: 0 0 8px;
-          font-family: Georgia, serif;
-          font-size: 25px;
+          font-size: 27px;
+          color: #49372e;
         }
 
-        .course-table-heading p {
+        .course-page-header p {
           margin: 0;
-          color: #806752;
-        }
-
-        .course-filters {
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .course-filters input,
-        .course-filters select {
-          min-width: 0;
-          padding: 12px;
-          border: 1px solid #e5d5c3;
-          border-radius: 7px;
-          background: white;
-          color: #4b2e1d;
+          color: #88766a;
           font-size: 14px;
+        }
+
+        .course-add-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px 20px;
+          background: #a77b45;
+          color: white;
+          text-decoration: none;
+          border-radius: 7px;
+          font-size: 14px;
+          font-weight: 600;
+          transition: 0.3s;
+        }
+
+        .course-add-btn:hover {
+          background: #79552f;
+          color: white;
+        }
+
+        .course-stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 20px;
+          margin-bottom: 25px;
+        }
+
+        .course-stat-card {
+          padding: 22px;
+          background: white;
+          border: 1px solid #eee3d5;
+          border-radius: 12px;
+          box-shadow: 0 3px 12px rgba(73, 55, 46, 0.05);
+        }
+
+        .course-stat-card h3 {
+          margin: 0 0 8px;
+          color: #a77b45;
+          font-size: 29px;
+        }
+
+        .course-stat-card p {
+          margin: 0;
+          color: #88766a;
+          font-size: 14px;
+        }
+
+        .course-filter-bar {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .course-filter-bar input,
+        .course-filter-bar select {
+          height: 45px;
+          padding: 0 14px;
+          background: white;
+          border: 1px solid #e4d8ca;
+          border-radius: 7px;
           outline: none;
+          color: #49372e;
+          font-size: 14px;
+          box-sizing: border-box;
         }
 
-        .course-filters input {
-          width: 220px;
+        .course-filter-bar input {
+          flex: 1;
+          min-width: 0;
         }
 
-        .course-filters select {
-          width: 190px;
+        .course-filter-bar select {
+          width: 210px;
+          cursor: pointer;
         }
 
-        .course-filters input:focus,
-        .course-filters select:focus {
-          border-color: #b38b4e;
+        .course-filter-bar input:focus,
+        .course-filter-bar select:focus {
+          border-color: #a77b45;
+          box-shadow: 0 0 0 3px rgba(167, 123, 69, 0.12);
         }
 
         .course-table-wrapper {
           width: 100%;
           overflow-x: auto;
-          border: 1px solid #e8d9c9;
-          border-radius: 8px;
+          background: white;
+          border: 1px solid #eee3d5;
+          border-radius: 12px;
+          box-shadow: 0 3px 12px rgba(73, 55, 46, 0.05);
         }
 
         .course-table {
           width: 100%;
-          min-width: 750px;
+          min-width: 850px;
           border-collapse: collapse;
+          text-align: left;
+        }
+
+        .course-table thead {
+          background: #eee3d5;
         }
 
         .course-table th {
-          padding: 15px 12px;
-          background: #f3e6d8;
-          color: #4b2e1d;
-          text-align: left;
-          border: 1px solid #e8d9c9;
+          padding: 16px 15px;
+          color: #5a4232;
+          font-size: 13px;
+          font-weight: 700;
+          white-space: nowrap;
         }
 
         .course-table td {
-          padding: 14px 12px;
-          border: 1px solid #eaded1;
-          color: #44352b;
-          font-size: 14px;
+          padding: 16px 15px;
+          border-bottom: 1px solid #f0e8df;
+          color: #625247;
+          font-size: 13px;
+          vertical-align: middle;
         }
 
-        .status {
+        .course-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+
+        .course-table tbody tr:hover {
+          background: #fdfaf6;
+        }
+
+        .course-status {
           display: inline-block;
           padding: 6px 11px;
           border-radius: 20px;
@@ -311,322 +238,190 @@ export default function ManageCourses() {
           font-weight: 600;
         }
 
-        .status.active {
-          background: #e1efdf;
-          color: #286337;
+        .course-status.active {
+          background: #e8f4e9;
+          color: #347343;
         }
 
-        .status.inactive {
-          background: #fde3dc;
-          color: #a53d2b;
+        .course-status.inactive {
+          background: #f5e8e4;
+          color: #a34d3f;
         }
 
-        .edit-btn,
-        .delete-btn,
-        .save-btn,
-        .cancel-btn {
-          padding: 8px 11px;
-          margin: 2px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .edit-btn {
-          background: #f5eadc;
-          color: #80551e;
-          border: 1px solid #b38b4e;
-        }
-
-        .delete-btn {
-          background: #fff0ed;
-          color: #b33b2b;
-          border: 1px solid #d97765;
-        }
-
-        .save-btn {
-          background: #76563e;
-          color: white;
-          border: 1px solid #76563e;
-        }
-
-        .cancel-btn {
-          background: #eee5da;
-          color: #4b2e1d;
-          border: 1px solid #e0d0bd;
-        }
-
-        .course-edit-form {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 15px;
-          padding: 20px;
-          margin-bottom: 22px;
-          border: 1px solid #e8d9c9;
-          border-radius: 8px;
-          background: #faf5ef;
-        }
-
-        .course-edit-form h3 {
-          grid-column: 1 / -1;
-          margin: 0;
-          font-family: Georgia, serif;
-        }
-
-        .course-edit-form label {
+        .course-actions {
           display: flex;
-          flex-direction: column;
+          align-items: center;
           gap: 7px;
-          font-size: 13px;
-          font-weight: 600;
-        }
-
-        .course-edit-form input,
-        .course-edit-form select {
-          width: 100%;
-          min-width: 0;
-          padding: 11px;
-          border: 1px solid #e5d5c3;
-          border-radius: 6px;
-          background: white;
-          font-size: 14px;
-        }
-
-        .course-edit-actions {
-          grid-column: 1 / -1;
-          display: flex;
           flex-wrap: wrap;
-          gap: 8px;
         }
 
-        .empty-courses {
-          padding: 30px !important;
-          text-align: center;
-          color: #806752 !important;
-        }
-
-        .course-table-hint {
-          color: #806752;
+        .course-action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 10px;
+          border: none;
+          border-radius: 5px;
           font-size: 12px;
-          margin-top: 12px;
+          font-weight: 600;
+          text-decoration: none;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: 0.2s;
         }
 
-        @media (max-width: 1000px) {
+        .course-edit-btn {
+          background: #f4e8d7;
+          color: #78552e;
+        }
+
+        .course-edit-btn:hover {
+          background: #e8d3b8;
+          color: #593c20;
+        }
+
+        .course-toggle-btn {
+          background: #eee7dc;
+          color: #654c36;
+        }
+
+        .course-toggle-btn:hover {
+          background: #dfd0bb;
+        }
+
+        .course-delete-btn {
+          background: #f8e5e2;
+          color: #b13d32;
+        }
+
+        .course-delete-btn:hover {
+          background: #f0ceca;
+        }
+
+        .course-no-data {
+          text-align: center !important;
+          padding: 35px !important;
+          color: #88766a !important;
+        }
+
+        @media (max-width: 768px) {
+          .manage-courses {
+            padding: 18px;
+          }
+
+          .course-page-header h2 {
+            font-size: 23px;
+          }
+
           .course-stats {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 650px) {
-          .courses-page {
-            padding: 15px;
+            gap: 12px;
           }
 
-          .courses-heading {
-            align-items: stretch;
+          .course-stat-card {
+            padding: 17px;
+          }
+
+          .course-filter-bar {
             flex-direction: column;
           }
 
-          .add-course {
-            text-align: center;
+          .course-filter-bar select {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .manage-courses {
+            padding: 12px;
+          }
+
+          .course-page-header h2 {
+            font-size: 21px;
+          }
+
+          .course-add-btn {
+            padding: 10px 13px;
+            font-size: 12px;
           }
 
           .course-stats {
             grid-template-columns: 1fr;
           }
 
-          .course-table-panel {
-            padding: 13px;
-          }
-
-          .course-filters {
-            width: 100%;
-            flex-direction: column;
-          }
-
-          .course-filters input,
-          .course-filters select {
-            width: 100%;
-          }
-
-          .course-edit-form {
-            grid-template-columns: 1fr;
-          }
-
-          .course-edit-form h3,
-          .course-edit-actions {
-            grid-column: auto;
+          .course-stat-card h3 {
+            font-size: 24px;
           }
         }
       `}</style>
 
-      <div className="courses-heading">
-        <div>
-          <p>Home / Courses</p>
-          <h1>Manage Courses</h1>
-          <p>Add and manage your beauty courses.</p>
-        </div>
-
-        <Link to="/admin/addcourse" className="add-course">
-          + Add Course
-        </Link>
-      </div>
-
-      <div className="course-stats">
-        <div className="course-stat">
-          <p>Total Courses</p>
-          <h2>{courses.length}</h2>
-        </div>
-
-        <div className="course-stat">
-          <p>Categories</p>
-          <h2>{categories.length}</h2>
-        </div>
-
-        <div className="course-stat">
-          <p>Students Enrolled</p>
-          <h2>{enrolledStudents}</h2>
-        </div>
-
-        <div className="course-stat">
-          <p>Active Courses</p>
-          <h2>{activeCourses}</h2>
-        </div>
-      </div>
-
-      <div className="course-table-panel">
-        <div className="course-table-heading">
+      <div className="manage-courses">
+        <div className="course-page-header">
           <div>
-            <h2>Course List</h2>
-            <p>View and manage all beauty courses.</p>
+            <h2>Manage Courses</h2>
+            <p>Manage your beauty academy courses here.</p>
           </div>
 
-          <div className="course-filters">
-            <input
-              type="text"
-              placeholder="Search courses..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <Link to="/admin/addcourse" className="course-add-btn">
+            + Add Course
+          </Link>
+        </div>
 
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="All">All Categories</option>
+        {/* Course Statistics */}
+        <div className="course-stats">
+          <div className="course-stat-card">
+            <h3>{courses.length}</h3>
+            <p>Total Courses</p>
+          </div>
 
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+          <div className="course-stat-card">
+            <h3>
+              {courses.filter((item) => item.status === "Active").length}
+            </h3>
+            <p>Active Courses</p>
+          </div>
+
+          <div className="course-stat-card">
+            <h3>
+              {courses.filter((item) => item.status === "Inactive").length}
+            </h3>
+            <p>Inactive Courses</p>
           </div>
         </div>
 
-        {editId !== null && (
-          <form className="course-edit-form" onSubmit={handleUpdate}>
-            <h3>Edit Course</h3>
+        {/* Search and Category Filter */}
+        <div className="course-filter-bar">
+          <input
+            type="text"
+            placeholder="Search course or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-            <label>
-              Course Name *
-              <input
-                type="text"
-                value={editData.name}
-                onChange={(e) =>
-                  setEditData({ ...editData, name: e.target.value })
-                }
-                required
-              />
-            </label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="All">All Categories</option>
 
-            <label>
-              Category *
-              <select
-                value={editData.category}
-                onChange={(e) =>
-                  setEditData({ ...editData, category: e.target.value })
-                }
-                required
-              >
-                <option value="">Select category</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Duration *
-              <input
-                type="text"
-                value={editData.duration}
-                onChange={(e) =>
-                  setEditData({ ...editData, duration: e.target.value })
-                }
-                placeholder="e.g. 2 Months"
-                required
-              />
-            </label>
-
-            <label>
-              Price (₹) *
-              <input
-                type="number"
-                min="0"
-                value={editData.price}
-                onChange={(e) =>
-                  setEditData({ ...editData, price: e.target.value })
-                }
-                required
-              />
-            </label>
-
-            <label>
-              Status
-              <select
-                value={String(editData.status)}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    status: e.target.value === "true",
-                  })
-                }
-              >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </label>
-
-            <div className="course-edit-actions">
-              <button type="submit" className="save-btn">
-                Save Changes
-              </button>
-
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => setEditId(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-
+        {/* Courses Table */}
         <div className="course-table-wrapper">
           <table className="course-table">
             <thead>
               <tr>
-                <th>No.</th>
+                <th>#</th>
                 <th>Course Name</th>
                 <th>Category</th>
                 <th>Duration</th>
-                <th>Price</th>
+                <th>Price (₹)</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -634,66 +429,67 @@ export default function ManageCourses() {
 
             <tbody>
               {filteredCourses.length > 0 ? (
-                filteredCourses.map((course, index) => {
-                  const courseName = course.name || course.title || "";
-                  const isActive =
-                    course.status === true ||
-                    course.status === "true" ||
-                    course.status === "Active";
+                filteredCourses.map((course) => (
+                  <tr key={course.id}>
+                    <td>{course.id}</td>
+                    <td>{course.title}</td>
+                    <td>{course.category}</td>
+                    <td>{course.duration}</td>
+                    <td>₹{course.price.toLocaleString("en-IN")}</td>
 
-                  return (
-                    <tr key={course.id ?? `${courseName}-${index}`}>
-                      <td>{index + 1}</td>
-                      <td>{courseName}</td>
-                      <td>{course.category || "-"}</td>
-                      <td>{course.duration || "-"}</td>
-                      <td>₹{course.price ?? 0}</td>
-                      <td>
-                        <span
-                          className={`status ${
-                            isActive ? "active" : "inactive"
-                          }`}
-                        >
-                          {isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="edit-btn"
-                          onClick={() => handleEdit(course)}
+                    <td>
+                      <span
+                        className={
+                          course.status === "Active"
+                            ? "course-status active"
+                            : "course-status inactive"
+                        }
+                      >
+                        {course.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="course-actions">
+                        <Link
+                          to={`/admin/editcourse/${course.id}`}
+                          className="course-action-btn course-edit-btn"
                         >
                           Edit
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="course-action-btn course-toggle-btn"
+                          onClick={() => toggleStatus(course.id)}
+                        >
+                          {course.status === "Active"
+                            ? "Deactivate"
+                            : "Activate"}
                         </button>
 
                         <button
                           type="button"
-                          className="delete-btn"
-                          onClick={() => handleDelete(course.id)}
+                          className="course-action-btn course-delete-btn"
+                          onClick={() => deleteCourse(course.id)}
                         >
                           Delete
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="empty-courses">
-                    {courses.length === 0
-                      ? "No courses added yet. Click Add Course to get started."
-                      : "No courses match your search or category."}
+                  <td colSpan="7" className="course-no-data">
+                    No courses found.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-
-        <p className="course-table-hint">
-          On mobile, swipe horizontally to see all columns.
-        </p>
       </div>
-    </div>
+    </>
   );
 }
