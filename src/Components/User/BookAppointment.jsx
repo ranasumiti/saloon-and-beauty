@@ -1,22 +1,24 @@
 
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import services from "./ServiceData";
 
 export default function BookAppointment() {
-  const [service, setService] = useState("");
+  const location = useLocation();
+
+  const passedService = location.state?.service;
+
+  const [service, setService] = useState(
+    typeof passedService === "string"
+      ? passedService
+      : passedService?.name || ""
+  );
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [success, setSuccess] = useState(false);
-
-  const services = [
-    { name: "Facial Treatment", price: 799, icon: "✧" },
-    { name: "Makeup", price: 1499, icon: "♡" },
-    { name: "Hair Styling", price: 999, icon: "❋" },
-    { name: "Nail Care", price: 499, icon: "✿" },
-    { name: "Bridal Makeup", price: 4999, icon: "♕" },
-    { name: "Hair Spa", price: 1299, icon: "❀" },
-  ];
 
   return (
     <>
@@ -273,7 +275,7 @@ export default function BookAppointment() {
               {services.map((item) => (
                 <button
                   type="button"
-                  key={item.name}
+                  key={item.id || item.name}
                   className={
                     service === item.name
                       ? "service-card selected"
@@ -285,12 +287,17 @@ export default function BookAppointment() {
                   }}
                 >
                   <span className="service-icon">{item.icon}</span>
+
                   <h3>{item.name}</h3>
+
                   <span className="service-price">
                     ₹{item.price.toLocaleString("en-IN")}
                   </span>
+
                   <span className="selected-label">
-                    {service === item.name ? "✓ Selected" : "Select service"}
+                    {service === item.name
+                      ? "✓ Selected"
+                      : "Select service"}
                   </span>
                 </button>
               ))}
@@ -299,6 +306,7 @@ export default function BookAppointment() {
 
           <section className="booking-form">
             <h2>Your Details</h2>
+
             <p className="booking-subtitle">
               Complete the form to continue.
             </p>
@@ -330,7 +338,10 @@ export default function BookAppointment() {
               }}
             >
               <div className="booking-field">
-                <label htmlFor="booking-date">Appointment Date *</label>
+                <label htmlFor="booking-date">
+                  Appointment Date *
+                </label>
+
                 <input
                   id="booking-date"
                   type="date"
@@ -345,7 +356,10 @@ export default function BookAppointment() {
               </div>
 
               <div className="booking-field">
-                <label htmlFor="booking-time">Appointment Time *</label>
+                <label htmlFor="booking-time">
+                  Appointment Time *
+                </label>
+
                 <select
                   id="booking-time"
                   value={time}
@@ -356,6 +370,7 @@ export default function BookAppointment() {
                   required
                 >
                   <option value="">Choose time</option>
+
                   {[
                     "10:00 AM",
                     "11:00 AM",
@@ -375,6 +390,7 @@ export default function BookAppointment() {
 
               <div className="booking-field">
                 <label htmlFor="booking-name">Full Name *</label>
+
                 <input
                   id="booking-name"
                   type="text"
@@ -389,7 +405,10 @@ export default function BookAppointment() {
               </div>
 
               <div className="booking-field">
-                <label htmlFor="booking-phone">Phone Number *</label>
+                <label htmlFor="booking-phone">
+                  Phone Number *
+                </label>
+
                 <input
                   id="booking-phone"
                   type="tel"
@@ -410,9 +429,12 @@ export default function BookAppointment() {
                 <span>
                   {service || "No service selected"}
                 </span>
+
                 <strong>
                   ₹
-                  {services.find((item) => item.name === service)?.price || 0}
+                  {(
+                    services.find((item) => item.name === service)?.price || 0
+                  ).toLocaleString("en-IN")}
                 </strong>
               </div>
 
