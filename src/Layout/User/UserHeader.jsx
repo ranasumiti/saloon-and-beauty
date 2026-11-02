@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function UserHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => !!localStorage.getItem("token")
@@ -14,17 +15,17 @@ export default function UserHeader() {
       setIsLoggedIn(!!localStorage.getItem("token"));
     };
 
-    // Update header when login/logout happens in this tab
-    window.addEventListener("authChanged", updateLoginStatus);
+    // Check token whenever page/route changes
+    updateLoginStatus();
 
-    // Update header if localStorage changes in another tab
+    window.addEventListener("authChanged", updateLoginStatus);
     window.addEventListener("storage", updateLoginStatus);
 
     return () => {
       window.removeEventListener("authChanged", updateLoginStatus);
       window.removeEventListener("storage", updateLoginStatus);
     };
-  }, []);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -33,6 +34,8 @@ export default function UserHeader() {
     localStorage.removeItem("name");
 
     setIsLoggedIn(false);
+    window.dispatchEvent(new Event("authChanged"));
+
     navigate("/login");
   };
 

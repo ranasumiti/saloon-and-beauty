@@ -3,10 +3,12 @@ import { CUSTOMER_BASE_URL, LOGIN, REGISTER } from "../endpoints";
 
 
 export const setData = (data) => {
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("email", data.email)
-    localStorage.setItem("userType", data.userType)
-    localStorage.setItem("name", data.name)
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("email", data.email);
+    localStorage.setItem("userType", data.userType);
+    localStorage.setItem("name", data.name);
+
+     window.dispatchEvent(new Event("authChanged"));
 
 }
 
