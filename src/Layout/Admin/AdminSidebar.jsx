@@ -1,6 +1,28 @@
-import { NavLink } from "react-router-dom";
+
+import { NavLink, useNavigate } from "react-router-dom";
 
 function AdminSidebar({ closeSidebar }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear login data
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("name");
+
+    // Update header login status
+    window.dispatchEvent(new Event("authChanged"));
+
+    // Close sidebar if mobile
+    if (closeSidebar) {
+      closeSidebar();
+    }
+
+    // Navigate to login page
+    navigate("/login");
+  };
+
   return (
     <div className="admin-sidebar">
       <h2>Beauty & Glow</h2>
@@ -36,11 +58,9 @@ function AdminSidebar({ closeSidebar }) {
         🎓 Students
       </NavLink>
 
-
-<NavLink to="/admin/payments" onClick={closeSidebar}>
-  💳 Payments
-</NavLink>
-
+      <NavLink to="/admin/payments" onClick={closeSidebar}>
+        💳 Payments
+      </NavLink>
 
       <NavLink to="/admin/enquiries" onClick={closeSidebar}>
         ✉️ Enquiries
@@ -50,9 +70,7 @@ function AdminSidebar({ closeSidebar }) {
         ⭐ Reviews
       </NavLink>
 
-      <button onClick={function () {
-        window.location.href = "/login";
-      }}>
+      <button onClick={handleLogout}>
         Logout
       </button>
 

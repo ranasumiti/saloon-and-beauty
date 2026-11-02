@@ -12,7 +12,7 @@ export default function Login() {
   const nav = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
+    try { 
 
       const payload = {
         email: email,
@@ -31,12 +31,13 @@ export default function Login() {
         }
 
         if (!responseData.token) {
-          window.dispatchEvent(new Event("authChanged"));
+          // window.dispatchEvent(new Event("authChanged"));
           toast.error("Login token not received");
           return;
         }
 
         setData(responseData)
+        window.dispatchEvent(new Event("authChanged"));
         if (Number(responseData.userType) === 1) {
           toast.success("Admin login successful");
           nav("/admin");
