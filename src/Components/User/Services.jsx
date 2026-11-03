@@ -1,7 +1,26 @@
-
+import { AllServices } from "../../services/AdminService";
 import { Link } from "react-router-dom";
-import services from "./ServiceData";
+import { useState, useEffect } from "react";
 export default function Services() {
+  const [services, setServices] = useState([]);
+
+const fetchServices = async () => {
+  try {
+    const res = await AllServices();
+
+    console.log("All Services:", res.data);
+
+    if (res.data.success) {
+      setServices(res.data.data);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+useEffect(() => {
+  fetchServices();
+}, []);
   return (
     <>
       <section className="glow-services" id="services">
@@ -23,50 +42,53 @@ export default function Services() {
           </p>
         </div>
 
-        <div className="glow-services-grid">
+<div className="glow-services-grid">
 
-          {services.map((item) => (
-            <article className="glow-service-card" key={item.id}>
+  {services.filter(item => item.status && !item.isDelete).map((item) => (
 
-              <div className="glow-service-image">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  loading="lazy"
-                />
-              </div>
+    <article className="glow-service-card" key={item._id}>
 
-              <div className="glow-service-icon">
-                {item.icon}
-              </div>
+      <div className="glow-service-image">
+        <img
+          src={item.image}
+          alt={item.serviceName}
+          loading="lazy"
+        />
+      </div>
 
-              <div className="glow-service-content">
+      <div className="glow-service-icon">
+        ✨
+      </div>
 
-                <h2>{item.name}</h2>
+      <div className="glow-service-content">
 
-                <p>{item.description}</p>
+        <h2>{item.serviceName}</h2>
 
-                <span className="glow-gold-line"></span>
+        <p>{item.description}</p>
 
-                <strong className="glow-price">
-                  ₹{item.price.toLocaleString("en-IN")}
-                </strong>
+        <span className="glow-gold-line"></span>
 
-                <small>Starting From</small>
+        <strong className="glow-price">
+          ₹{Number(item.price).toLocaleString("en-IN")}
+        </strong>
 
-                <Link
-                  to={`/servicedetail/${item.id}`}
-                  className="glow-book-button"
-                >
-                  Explore Service <span>→</span>
-                </Link>
+        <small>Starting From</small>
 
-              </div>
+        <Link
+          to={`/servicedetail/${item._id}`}
+          className="glow-book-button"
+        >
+          Explore Service <span>→</span>
+        </Link>
 
-            </article>
-          ))}
+      </div>
 
-        </div>
+    </article>
+
+  ))}
+
+</div>
+       
 
         <div className="glow-services-decoration">
           <span></span> ✧ <span></span>

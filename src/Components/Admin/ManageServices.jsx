@@ -1,49 +1,65 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {  AllServices } from "../../services/AdminService";
+import { toast } from "react-toastify";
+
 
 export default function ManageServices() {
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: "Hair Styling",
-      category: "Hair",
-      price: 1500,
-      status: true,
-    },
-    {
-      id: 2,
-      name: "Facial Treatment",
-      category: "Skin",
-      price: 2000,
-      status: true,
-    },
-    {
-      id: 3,
-      name: "Bridal Makeup",
-      category: "Makeup",
-      price: 5000,
-      status: false,
-    },
-  ]);
-
+  const [services, setServices] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [loading, setLoading] = useState(false);
 
+  // Get services from backend
+ const fetchServices = async () => {
+  try {
+    setLoading(true);
+
+    const res = await AllServices({});
+
+    if (res.data.success) {
+      setServices(res.data.data || []);
+    } else {
+      toast.error(res.data.message || "Unable to fetch services");
+    }
+
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to load services");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  // Get categories
   const categories = [
-    ...new Set(services.map((service) => service.category).filter(Boolean)),
+    ...new Set(
+      services
+        .map((service) => service.category)
+        .filter(Boolean)
+    ),
   ];
 
+  // Count active services
   const activeServices = services.filter(
-    (service) => service.status === true
+    (service) =>
+      service.status === true || service.status === "true"
   ).length;
 
+  // Search and category filter
   const filteredServices = services.filter((service) => {
     const searchText = search.toLowerCase().trim();
 
+    const serviceName = (service.serviceName || "").toLowerCase();
+    const serviceCategory = (service.category || "").toLowerCase();
+
     const matchesSearch =
-      service.name.toLowerCase().includes(searchText) ||
-      service.category.toLowerCase().includes(searchText);
+      serviceName.includes(searchText) ||
+      serviceCategory.includes(searchText);
 
     const matchesCategory =
       category === "All" || service.category === category;
@@ -51,20 +67,27 @@ export default function ManageServices() {
     return matchesSearch && matchesCategory;
   });
 
+  // Check service status
+  const isActive = (status) => {
+    return status === true || status === "true";
+  };
+
+  // Temporary frontend status change
   const toggleStatus = (id) => {
     setServices((previous) =>
       previous.map((service) =>
-        service.id === id
-          ? { ...service, status: !service.status }
+        service._id === id
+          ? { ...service, status: !isActive(service.status) }
           : service
       )
     );
   };
 
+  // Temporary frontend delete
   const deleteService = (id) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
       setServices((previous) =>
-        previous.filter((service) => service.id !== id)
+        previous.filter((service) => service._id !== id)
       );
     }
   };
@@ -372,28 +395,39 @@ export default function ManageServices() {
             </thead>
 
             <tbody>
-              {filteredServices.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="empty-services">
+                    Loading services...
+                  </td>
+                </tr>
+              ) : filteredServices.length > 0 ? (
                 filteredServices.map((service, index) => (
-                  <tr key={service.id}>
+                  <tr key={service._id}>
                     <td>{index + 1}</td>
-                    <td>{service.name}</td>
+
+                    <td>{service.serviceName}</td>
+
                     <td>{service.category}</td>
-                    <td>₹{service.price.toLocaleString("en-IN")}</td>
+
+                    <td>
+                      ₹{Number(service.price || 0).toLocaleString("en-IN")}
+                    </td>
 
                     <td>
                       <span
                         className={`service-status ${
-                          service.status ? "active" : "inactive"
+                          isActive(service.status) ? "active" : "inactive"
                         }`}
                       >
-                        {service.status ? "Active" : "Inactive"}
+                        {isActive(service.status) ? "Active" : "Inactive"}
                       </span>
                     </td>
 
                     <td>
                       <div className="service-actions">
                         <Link
-                          to={`/admin/editservice/${service.id}`}
+                          to={`/admin/editservice/${service._id}`}
                           className="edit-btn"
                         >
                           Edit
@@ -402,15 +436,17 @@ export default function ManageServices() {
                         <button
                           type="button"
                           className="toggle-btn"
-                          onClick={() => toggleStatus(service.id)}
+                          onClick={() => toggleStatus(service._id)}
                         >
-                          {service.status ? "Deactivate" : "Activate"}
+                          {isActive(service.status)
+                            ? "Deactivate"
+                            : "Activate"}
                         </button>
 
                         <button
                           type="button"
                           className="delete-btn"
-                          onClick={() => deleteService(service.id)}
+                          onClick={() => deleteService(service._id)}
                         >
                           Delete
                         </button>

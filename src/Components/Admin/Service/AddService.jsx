@@ -1,5 +1,7 @@
 
 import { useState } from "react";
+import { AddServices } from "../../../services/AdminService";
+import { toast } from "react-toastify";
 
 
 export default function AddService() {
@@ -7,7 +9,7 @@ export default function AddService() {
 const [name,setName]=useState("");
 const [category,setCategory]=useState("");
 const[price,setPrice]=useState("");
-const[duration,setduration]=useState("");
+const [duration, setduration] = useState("");
 const[description,setDescription]=useState("");
 const[status,setstatus]=useState("true");
 
@@ -15,10 +17,15 @@ const[status,setstatus]=useState("true");
 
 const handleSubmit= async(e)=>{
   e.preventDefault();
-  
+
+    if (!image) {
+    alert("Please select an image");
+    return;
+  }
+
 
   const formData=new FormData();
-  formData.append("name",name);
+  formData.append("serviceName",name);
   formData.append("image",image);
   formData.append("category",category);
   formData.append("price",price);
@@ -26,14 +33,27 @@ const handleSubmit= async(e)=>{
   formData.append("description",description);
   formData.append("status",status);
 
-  try{
-const res=await Addcateogry(formData);
-console.log("Service added successfully", res.data);
+ try {
+  const res = await AddServices(formData);
 
+  if (res.data.success) {
+    toast.success("Service added successfully!");
+
+    setName("");
+    setImage(null);
+    setCategory("");
+    setPrice("");
+    setduration("");
+    setDescription("");
+    setstatus("true");
+  } else {
+    toast.error(res.data.message || "Service not added");
   }
-  catch(err){
-    console.log("error",err)
-  }
+
+} catch (err) {
+  console.log(err);
+  toast.error("Something went wrong!");
+}
   
 
 
@@ -120,7 +140,15 @@ console.log("Service added successfully", res.data);
                   />
                 </div>
 
-                
+                <div className="service-field">
+  <label>Service Duration *</label>
+  <input
+    type="text"
+    value={duration}
+    onChange={(e) => setduration(e.target.value)}
+    placeholder="e.g. 45 minutes"
+  />
+</div>
                   
                   
 
@@ -205,9 +233,9 @@ console.log("Service added successfully", res.data);
           <button className="service-cancel-btn" type="reset">
             Reset Form
           </button>
-          <button className="service-save-btn" type="button" onClick={handleSubmit}>
-            Save Service
-          </button>
+          <button className="service-save-btn" type="submit">
+  Save Service
+</button>
         </div>
       </form>
 
