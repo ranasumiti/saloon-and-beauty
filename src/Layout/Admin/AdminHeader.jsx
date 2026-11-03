@@ -38,7 +38,7 @@ export default function AdminHeader({ onMenuClick }) {
         <div className="admin-profile">
           <div className="admin-avatar">A</div>
           <div className="admin-profile-info">
-            <h4>Admin</h4>
+            <h4>Loveleen & Sumiti</h4>
             <p>Salon Administrator</p>
           </div>
         </div>
