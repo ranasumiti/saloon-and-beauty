@@ -11,13 +11,43 @@ export default function ServiceDetails() {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchService();
-  }, [id]);
+//   useEffect(() => {
+//     fetchService();
+//   }, [id]);
 
- const fetchService = async () => {
+//  const fetchService = async () => {
+//   try {
+//     setLoading(true);
+
+//     const res = await GetSingleService({ _id: id });
+
+//     console.log("Service Response:", res.data);
+
+//     if (res.data.success) {
+//       setService(res.data.data);
+//     }
+//      else {
+//       setService(null);
+//     }
+
+//   } 
+//   catch (error) {
+//     console.log("Service Details Error:", error.response?.data || error.message);
+//     setService(null);
+//   }
+//    finally {
+//     setLoading(false);
+//   }
+// };
+
+useEffect(() => {
+  fetchService();
+}, [id]);
+
+const fetchService = async () => {
   try {
     setLoading(true);
+    setService(null);
 
     const res = await GetSingleService({ _id: id });
 
@@ -30,24 +60,26 @@ export default function ServiceDetails() {
     }
 
   } catch (error) {
-    console.log("Service Details Error:", error.response?.data || error.message);
+    console.log("Service Error:", error.message);
     setService(null);
+
   } finally {
     setLoading(false);
   }
 };
 
   if (loading) {
-    return <h2 style={{ textAlign: "center", padding: "60px" }}>
-      Loading Service...
-    </h2>;
-  }
+  return (
+    <div className="service-loader">
+      <div className="service-spinner"></div>
+      <p>Preparing Your Experience...</p>
+    </div>
+  );
+}
 
-  if (!service) {
-    return <h2 style={{ textAlign: "center", padding: "60px" }}>
-      Service Not Found
-    </h2>;
-  }
+if (!service) {
+  return <h2>Service Not Found</h2>;
+}
 
   return (
     <>
@@ -95,6 +127,36 @@ export default function ServiceDetails() {
           padding: 25px;
         }
 
+        .service-loader {
+          min-height: 70vh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          background: #faf6ef;
+          gap: 18px;
+        }
+
+        .service-spinner {
+          width: 48px;
+          height: 48px;
+          border: 4px solid #eadbc9;
+          border-top: 4px solid #b78143;
+          border-radius: 50%;
+          animation: serviceSpin 0.8s linear infinite;
+        }
+
+        .service-loader p {
+          color: #87531f;
+          font-family: Georgia, serif;
+          font-size: 18px;
+          letter-spacing: 1px;
+        }
+
+        @keyframes serviceSpin {
+          to {
+            transform: rotate(360deg);
+      }}
         .detail-label {
           color: #a77943;
           font-size: 12px;

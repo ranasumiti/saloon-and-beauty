@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import services from "./ServiceData";
+
 
 export default function BookAppointment() {
   const location = useLocation();
