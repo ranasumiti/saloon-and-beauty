@@ -1,16 +1,52 @@
 
 import { useParams, Link } from "react-router-dom";
-import services from "./ServiceData";
+import { useEffect, useState } from "react";
+import { GetSingleService } from "../../services/AuthService";
+
+
 
 export default function ServiceDetails() {
   const { id } = useParams();
 
-  const service = services.find(
-    (item) => item.id === Number(id)
-  );
+  const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchService();
+  }, [id]);
+
+ const fetchService = async () => {
+  try {
+    setLoading(true);
+
+    const res = await GetSingleService({ _id: id });
+
+    console.log("Service Response:", res.data);
+
+    if (res.data.success) {
+      setService(res.data.data);
+    } else {
+      setService(null);
+    }
+
+  } catch (error) {
+    console.log("Service Details Error:", error.response?.data || error.message);
+    setService(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  if (loading) {
+    return <h2 style={{ textAlign: "center", padding: "60px" }}>
+      Loading Service...
+    </h2>;
+  }
 
   if (!service) {
-    return <h2>Service Not Found</h2>;
+    return <h2 style={{ textAlign: "center", padding: "60px" }}>
+      Service Not Found
+    </h2>;
   }
 
   return (
@@ -48,6 +84,11 @@ export default function ServiceDetails() {
           height: 100%;
           object-fit: cover;
           display: block;
+          transition: transform 0.6s ease;
+        }
+
+        .detail-image:hover img {
+          transform: scale(1.06);
         }
 
         .detail-content {
@@ -78,13 +119,6 @@ export default function ServiceDetails() {
           margin-bottom: 25px;
         }
 
-        .detail-line {
-          width: 65px;
-          height: 2px;
-          background: #b78143;
-          margin: 25px 0;
-        }
-
         .detail-price-label {
           display: block;
           color: #81766c;
@@ -110,12 +144,15 @@ export default function ServiceDetails() {
           font-size: 14px;
           font-weight: 600;
           letter-spacing: 0.5px;
-          transition: .3s;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(135, 91, 50, 0.12);
         }
 
         .detail-book-btn:hover {
           background: #382b20;
-          transform: translateY(-2px);
+          color: white;
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(135, 91, 50, 0.22);
         }
 
         .detail-back {
@@ -149,31 +186,6 @@ export default function ServiceDetails() {
             font-size: 31px;
           }
         }
-          /* Smooth image animation */
-.detail-image {
-  overflow: hidden;
-}
-
-.detail-image img {
-  transition: transform 0.6s ease;
-}
-
-.detail-image:hover img {
-  transform: scale(1.06);
-}
-
-/* Premium Book Now button */
-.detail-book-btn {
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(135, 91, 50, 0.12);
-}
-
-.detail-book-btn:hover {
-  background: #382b20;
-  color: white;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(135, 91, 50, 0.22);
-}
 
         @media(max-width: 450px) {
           .detail-image {
@@ -186,7 +198,10 @@ export default function ServiceDetails() {
         <div className="detail-container">
 
           <div className="detail-image">
-            <img src={service.image} alt={service.name} />
+            <img
+              src={service.image}
+              alt={service.serviceName}
+            />
           </div>
 
           <div className="detail-content">
@@ -195,25 +210,23 @@ export default function ServiceDetails() {
               Beauty & Glow Salon
             </span>
 
-            <h1>{service.name}</h1>
+            <h1>{service.serviceName}</h1>
 
             <p className="detail-description">
               {service.description}
             </p>
-
-            {/* <div className="detail-line"></div> */}
 
             <span className="detail-price-label">
               Starting From
             </span>
 
             <div className="detail-price">
-              ₹{service.price.toLocaleString("en-IN")}
+              ₹{Number(service.price).toLocaleString("en-IN")}
             </div>
 
             <Link
-              to="/book-appointment"
-              state={{ service: service.name }}
+              to="/bookappointment"
+              state={{ service: service.serviceName }}
               className="detail-book-btn"
             >
               Book Now →

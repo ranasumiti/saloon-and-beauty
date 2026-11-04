@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CUSTOMER_BASE_URL, LOGIN, REGISTER } from "../endpoints";
+import { ALLSERVICES, BASE_URL, CUSTOMER_BASE_URL, LOGIN, REGISTER, SINGLESERVICE } from "../endpoints";
 
 
 export const setData = (data) => {
@@ -21,3 +21,17 @@ export const login = async (data) => {
     const result = await axios.post(`${CUSTOMER_BASE_URL}${LOGIN}`, data);
     return result.data;
 };
+
+export function GetAllServices() {
+  return axios.post(
+    CUSTOMER_BASE_URL +ALLSERVICES ,
+    {}
+  );
+}
+
+export function GetSingleService(data) {
+  return axios.post(
+     CUSTOMER_BASE_URL+ SINGLESERVICE,
+    data
+  );
+}
