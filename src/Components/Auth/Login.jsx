@@ -1,7 +1,6 @@
-// Components/User/Login.jsx
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login, setData } from "../../services/AuthService";
 import { toast } from "react-toastify";
 
@@ -10,53 +9,57 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const nav = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try { 
 
+    try {
       const payload = {
         email: email,
         password: password,
-      }
+      };
+
       const res = await login(payload);
 
       if (res.success) {
-        const user = res.data?.user || res.data;
+        const user = res.data;
 
         let responseData = {
-          token: res.token || user?.token,
-          userType: res.data?.userType,
-          name: res.data?.name,
-          email: res.data?.email,
-        }
+          token: res.token,
+          userType: user.userType,
+          name: user.name,
+          email: user.email,
+        };
 
         if (!responseData.token) {
-          // window.dispatchEvent(new Event("authChanged"));
           toast.error("Login token not received");
           return;
         }
 
-        setData(responseData)
-        window.dispatchEvent(new Event("authChanged"));
-        if (Number(responseData.userType) === 1) {
+        setData(responseData);
+
+        if (responseData.userType === 1) {
           toast.success("Admin login successful");
           nav("/admin");
-        }
-        else {
+        } else if (responseData.userType === 4) {
+          toast.success("Beautician login successful");
+          nav("/beautician/dashboard");
+        } else if (responseData.userType === 2) {
           toast.success("User login successful");
           nav("/");
+        } else if (responseData.userType === 3) {
+          toast.success("Student login successful");
+          nav("/student");
+        } else {
+          toast.error("Invalid user type");
         }
-      }
-      else {
+      } else {
         toast.error(res.message || "Login failed");
       }
-    }
-    catch (err) {
-      console.log("Login error:", err);
-      console.log("Backend response:", err.response?.data);
-
+    } catch (error) {
+      console.log(error);
       toast.error(
-        err.response?.data?.message || err.message || "Login failed"
+        error.response?.data?.message || "Something went wrong"
       );
     }
   };
@@ -65,12 +68,26 @@ export default function Login() {
     <>
       <div className="bg-login-page">
         <div className="bg-login-card">
+
           <div className="bg-login-image">
             <div className="bg-flower">✿</div>
-            <h1>Beauty <span>&</span> Glow</h1>
-            <p className="bg-tagline">BEAUTY · CARE · CONFIDENCE</p>
+
+            <h1>
+              Beauty <span>&</span> Glow
+            </h1>
+
+            <p className="bg-tagline">
+              BEAUTY · CARE · CONFIDENCE
+            </p>
+
             <div className="bg-line"></div>
-            <h3>Glow Today<br />For A Brighter<br />You Tomorrow</h3>
+
+            <h3>
+              Glow Today<br />
+              For A Brighter<br />
+              You Tomorrow
+            </h3>
+
             <p className="bg-selfcare">
               Self Care Is A Form Of Self Love ♡
             </p>
@@ -78,13 +95,14 @@ export default function Login() {
 
           <div className="bg-login-content">
             <p className="bg-small-title">WELCOME BACK</p>
+
             <h2>Welcome Back</h2>
+
             <p className="bg-description">
               Login to book your appointments, explore services and more.
             </p>
 
-            <form
-              onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
               <input
                 type="email"
                 placeholder="Email address"
@@ -107,14 +125,14 @@ export default function Login() {
                   Remember me
                 </label>
 
-                <Link to="/forgot-password">Forgot password?</Link>
+                <Link to="/forgot-password">
+                  Forgot password?
+                </Link>
               </div>
 
               <button className="bg-submit-btn" type="submit">
                 Login <span>→</span>
               </button>
-
-              {/* {message && <p>{message}</p>} */}
             </form>
 
             <p className="bg-switch">
@@ -122,6 +140,7 @@ export default function Login() {
               <Link to="/register"> Register here</Link>
             </p>
           </div>
+
         </div>
       </div>
 
@@ -284,40 +303,6 @@ export default function Login() {
 
         .bg-submit-btn span {
           margin-left: 8px;
-        }
-
-        .bg-or {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          color: #8a8076;
-          margin: 25px 0 18px;
-          font-size: 12px;
-        }
-
-        .bg-or::before,
-        .bg-or::after {
-          content: "";
-          height: 1px;
-          background: #e3d7ca;
-          flex: 1;
-        }
-
-        .bg-google-btn {
-          width: 100%;
-          padding: 13px;
-          border: 1px solid #e1d4c7;
-          border-radius: 9px;
-          background: transparent;
-          cursor: pointer;
-          font-size: 14px;
-          color: #51483f;
-        }
-
-        .bg-google-btn b {
-          color: #4285f4;
-          margin-right: 10px;
-          font-size: 18px;
         }
 
         .bg-switch {
