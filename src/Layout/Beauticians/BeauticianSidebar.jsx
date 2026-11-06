@@ -32,7 +32,7 @@ export default function BeauticianSidebar({
         </div>
 
         <nav className="beautician-nav">
-          <NavLink to="/beautician/dashboard" onClick={closeSidebar}>
+          <NavLink to="/beautician" onClick={closeSidebar}>
             <span>▦</span> Dashboard
           </NavLink>
 

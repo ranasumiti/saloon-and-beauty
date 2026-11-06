@@ -1,16 +1,106 @@
 
+import {  Courseadd } from "../../../services/AdminService";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function AddCourse() {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [fee, setFee] = useState("");
+  const [duration, setDuration] = useState("");
+  const [trainerId, setTrainerId] = useState("");
+  const [status, setStatus] = useState("true");
+  const [certification, setCertification] = useState("true");
+  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
+      !name.trim() ||
+      !description.trim() ||
+      !fee ||
+      !duration.trim() ||
+      !image
+    ) {
+      toast.error("Please fill all required fields and select an image");
+      return;
+    }
+
+    if (Number(fee) < 0) {
+      toast.error("Course fee cannot be negative");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      formData.append("courseName", name);
+      formData.append("description", description);
+      formData.append("fee", Number(fee));
+      formData.append("duration", duration);
+      formData.append("trainerId", trainerId);
+      formData.append("status", status === "true");
+      formData.append("certification", certification === "true");
+      formData.append("image", image);
+
+      const res = await Courseadd(formData);
+
+      console.log("Course Response:", res.data);
+
+      if (res.data.success) {
+        toast.success("Course added successfully!");
+
+        setName("");
+        setDescription("");
+        setFee("");
+        setDuration("");
+        setTrainerId("");
+        setStatus("true");
+        setCertification("true");
+        setImage(null);
+        setImagePreview("");
+
+        const fileInput = document.getElementById("courseImage");
+        if (fileInput) fileInput.value = "";
+      } else {
+        toast.error(res.data.message || "Course not added");
+      }
+    } catch (err) {
+      console.log("Course Error:", err.response?.data || err);
+
+      toast.error(
+        err.response?.data?.message || "Something went wrong!"
+      );
+    }
+  };
+
+  const handleReset = () => {
+    setName("");
+    setDescription("");
+    setFee("");
+    setDuration("");
+    setTrainerId("");
+    setStatus("true");
+    setCertification("true");
+    setImage(null);
+    setImagePreview("");
+
+    const fileInput = document.getElementById("courseImage");
+    if (fileInput) fileInput.value = "";
+  };
 
   return (
     <div className="add-course-page">
+
       <div className="course-heading">
         <div>
           <p>Home / Courses / Add Course</p>
           <h1>Add New Course</h1>
-          <span>Create and manage your beauty academy courses.</span>
+          <span>
+            Create and manage your beauty academy courses.
+          </span>
         </div>
 
         <button
@@ -22,110 +112,162 @@ export default function AddCourse() {
         </button>
       </div>
 
-      <form className="course-form">
+      <form className="course-form" onSubmit={handleSubmit}>
+
         <div className="course-layout">
+
           <div className="course-main">
+
+            {/* Course Information */}
+
             <section className="course-card">
               <h2>Course Information</h2>
+
               <p className="course-subtitle">
                 Enter the basic details of your course.
               </p>
 
               <div className="course-fields">
+
                 <div className="course-field">
                   <label>Course Name *</label>
-                  <input type="text" placeholder="e.g. Professional Makeup" />
-                </div>
 
-                <div className="course-field">
-                  <label>Course Category *</label>
-                  <select defaultValue="">
-                    <option value="" disabled>Select category</option>
-                    <option>Makeup</option>
-                    <option>Hair Styling</option>
-                    <option>Skin Care</option>
-                    <option>Nail Art</option>
-                    <option>Beautician</option>
-                  </select>
-                </div>
-
-                <div className="course-field full-width">
-                  <label>Course Description *</label>
-                  <textarea
-                    rows="4"
-                    placeholder="Describe what students will learn..."
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Professional Makeup"
                   />
                 </div>
 
                 <div className="course-field">
                   <label>Course Fee (₹) *</label>
-                  <input type="number" min="0" placeholder="Enter course fee" />
+
+                  <input
+                    type="number"
+                    min="0"
+                    value={fee}
+                    onChange={(e) => setFee(e.target.value)}
+                    placeholder="Enter course fee"
+                  />
+                </div>
+
+                <div className="course-field full-width">
+                  <label>Course Description *</label>
+
+                  <textarea
+                    rows="4"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe what students will learn..."
+                  />
                 </div>
 
                 <div className="course-field">
                   <label>Duration *</label>
-                  <input type="text" placeholder="e.g. 3 months" />
+
+                  <input
+                    type="text"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g. 3 months"
+                  />
                 </div>
 
                 <div className="course-field">
-                  <label>Instructor Name *</label>
-                  <input type="text" placeholder="Enter instructor name" />
+                  <label>Instructor User ID</label>
+
+                  <input
+                    type="text"
+                    value={trainerId}
+                    onChange={(e) => setTrainerId(e.target.value)}
+                    placeholder="Enter instructor MongoDB ID"
+                  />
                 </div>
 
                 <div className="course-field">
                   <label>Course Status</label>
-                  <select defaultValue="Active">
-                    <option>Active</option>
-                    <option>Inactive</option>
+
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
                   </select>
                 </div>
 
-                <div className="course-field full-width">
-                  <label>What Students Will Learn</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Enter course topics and skills..."
-                  />
+                <div className="course-field">
+                  <label>Certification</label>
+
+                  <select
+                    value={certification}
+                    onChange={(e) => setCertification(e.target.value)}
+                  >
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
                 </div>
+
               </div>
             </section>
 
+            {/* Course Image */}
+
             <section className="course-card">
               <h2>Course Image</h2>
+
               <p className="course-subtitle">
                 Upload an attractive image for your course.
               </p>
 
               <label className="course-upload">
+
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Course preview" />
+                  <img
+                    src={imagePreview}
+                    alt="Course preview"
+                  />
                 ) : (
                   <>
                     <span className="upload-icon">↑</span>
+
                     <strong>Upload course image</strong>
+
                     <span>PNG, JPG or WEBP</span>
-                    <span className="browse-btn">Browse Image</span>
+
+                    <span className="browse-btn">
+                      Browse Image
+                    </span>
                   </>
                 )}
 
                 <input
+                  id="courseImage"
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={(event) => {
-                    if (event.target.files?.[0]) {
-                      setImagePreview(
-                        URL.createObjectURL(event.target.files[0])
-                      );
+                    const file = event.target.files?.[0];
+
+                    if (file) {
+                      setImage(file);
+                      setImagePreview(URL.createObjectURL(file));
                     }
                   }}
                 />
+
               </label>
             </section>
+
           </div>
 
+          {/* Right Sidebar */}
+
           <aside className="course-side">
+
             <section className="course-card">
               <h2>Quick Tips</h2>
+
               <p>✦ Use a clear course title.</p>
               <p>₹ Set the correct course fee.</p>
               <p>◷ Mention the complete duration.</p>
@@ -134,25 +276,44 @@ export default function AddCourse() {
 
             <section className="course-card">
               <h2>Before Publishing</h2>
+
               <p>✓ Course details are correct</p>
               <p>✓ Fee and duration are added</p>
               <p>✓ Instructor details are included</p>
               <p>✓ Course image is clear</p>
             </section>
+
           </aside>
+
         </div>
+
+        {/* Buttons */}
 
         <div className="course-actions">
-          <button type="reset" className="course-reset">
+
+          <button
+            type="button"
+            className="course-reset"
+            onClick={handleReset}
+          >
             Reset Form
           </button>
-          <button type="button" className="course-save">
+
+          <button
+            type="submit"
+            className="course-save"
+          >
             Save Course
           </button>
+
         </div>
+
       </form>
 
+      {/* CSS */}
+
       <style>{`
+
         .add-course-page {
           min-height: 100vh;
           padding: 25px;
@@ -349,6 +510,7 @@ export default function AddCourse() {
         }
 
         @media (max-width: 1000px) {
+
           .course-layout {
             grid-template-columns: minmax(0, 1fr);
           }
@@ -356,9 +518,11 @@ export default function AddCourse() {
           .course-side {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
+
         }
 
         @media (max-width: 600px) {
+
           .add-course-page {
             padding: 14px;
           }
@@ -388,8 +552,11 @@ export default function AddCourse() {
           .course-actions button {
             width: 100%;
           }
+
         }
+
       `}</style>
+
     </div>
   );
 }

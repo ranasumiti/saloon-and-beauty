@@ -17,3 +17,13 @@ export const UPDATESERVICE = "/service/update";
 export const HARDDELETE = "/service/harddelete";
 export const SOFTDELETE = "/service/softdelete";
 
+<<<<<<< HEAD
+=======
+
+// course api
+
+export const COURSES = "/course/add";
+export const COURSESALL = "/course/add";
+export const REGISTER = "/register";
+export const LOGIN = "/login";
+>>>>>>> 954ab718c82b11c3b304be295fdbedd216d5b382
