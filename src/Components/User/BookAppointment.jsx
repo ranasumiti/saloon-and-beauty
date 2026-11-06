@@ -1,7 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-
+import axios from "axios";
 
 export default function BookAppointment() {
   const location = useLocation();
@@ -11,14 +10,91 @@ export default function BookAppointment() {
   const [service, setService] = useState(
     typeof passedService === "string"
       ? passedService
-      : passedService?.name || ""
+      : passedService?.serviceName || passedService?.name || ""
   );
+
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Fetch Services From Backend
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // Get login token from localStorage
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          setError("Please login first to load services.");
+          setServices([]);
+          return;
+        }
+
+        const response = await axios.post(
+          "http://localhost:2000/api/service/all",
+          {},
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
+        );
+
+        console.log("All Services:", response.data);
+
+        const serviceData = Array.isArray(response.data?.data)
+          ? response.data.data
+          : Array.isArray(response.data?.data?.services)
+          ? response.data.data.services
+          : Array.isArray(response.data?.services)
+          ? response.data.services
+          : [];
+
+        console.log("Services List:", serviceData);
+
+        // Display all services without status filter
+        setServices(serviceData);
+
+        // Automatically select passed service
+        if (passedService) {
+          const passedName =
+            typeof passedService === "string"
+              ? passedService
+              : passedService?.serviceName ||
+                passedService?.name ||
+                "";
+
+          const matchedService = serviceData.find(
+            (item) => item.serviceName === passedName
+          );
+
+          if (matchedService) {
+            setService(matchedService.serviceName);
+          }
+        }
+      } catch (err) {
+        console.error("Service fetch error:", err);
+
+        setError(
+          err.response?.data?.message ||
+            "Unable to load services. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   return (
     <>
@@ -212,6 +288,11 @@ export default function BookAppointment() {
           background: #87531f;
         }
 
+        .booking-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
         .booking-success {
           background: #eff7eb;
           border: 1px solid #c8dfc2;
@@ -221,6 +302,34 @@ export default function BookAppointment() {
           margin-bottom: 20px;
           font-size: 13px;
           line-height: 1.6;
+        }
+
+        .booking-loading,
+        .booking-error,
+        .booking-empty {
+          padding: 18px;
+          text-align: center;
+          border-radius: 9px;
+          font-size: 13px;
+          grid-column: 1 / -1;
+        }
+
+        .booking-loading,
+        .booking-empty {
+          background: #f8eddd;
+          color: #81766c;
+        }
+
+        .booking-error {
+          background: #fff0ed;
+          color: #a33b2b;
+        }
+
+        .service-duration {
+          display: block;
+          color: #81766c;
+          font-size: 12px;
+          margin-top: 5px;
         }
 
         .booking-note {
@@ -261,49 +370,74 @@ export default function BookAppointment() {
         <div className="booking-title">
           <span>BEAUTY & GLOW SALON</span>
           <h1>Book Your Appointment</h1>
-          <p>Choose your treatment and enjoy a little time for yourself.</p>
+          <p>
+            Choose your treatment and enjoy a little time for yourself.
+          </p>
         </div>
 
         <div className="booking-layout">
+          {/* Service Section */}
           <section className="booking-section">
             <h2>Choose Your Service</h2>
+
             <p className="booking-subtitle">
               Select a service card to continue.
             </p>
 
             <div className="service-cards">
-              {services.map((item) => (
-                <button
-                  type="button"
-                  key={item.id || item.name}
-                  className={
-                    service === item.name
-                      ? "service-card selected"
-                      : "service-card"
-                  }
-                  onClick={() => {
-                    setService(item.name);
-                    setSuccess(false);
-                  }}
-                >
-                  <span className="service-icon">{item.icon}</span>
+              {loading ? (
+                <div className="booking-loading">
+                  Loading services...
+                </div>
+              ) : error ? (
+                <div className="booking-error">
+                  {error}
+                </div>
+              ) : services.length === 0 ? (
+                <div className="booking-empty">
+                  No services are available right now.
+                </div>
+              ) : (
+                services.map((item) => (
+                  <button
+                    type="button"
+                    key={item._id || item.autoId || item.serviceName}
+                    className={
+                      service === item.serviceName
+                        ? "service-card selected"
+                        : "service-card"
+                    }
+                    onClick={() => {
+                      setService(item.serviceName);
+                      setSuccess(false);
+                    }}
+                  >
+                    <span className="service-icon">✦</span>
 
-                  <h3>{item.name}</h3>
+                    <h3>{item.serviceName}</h3>
 
-                  <span className="service-price">
-                    ₹{item.price.toLocaleString("en-IN")}
-                  </span>
+                    <span className="service-price">
+                      ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                    </span>
 
-                  <span className="selected-label">
-                    {service === item.name
-                      ? "✓ Selected"
-                      : "Select service"}
-                  </span>
-                </button>
-              ))}
+                    <span className="service-duration">
+                      {item.duration
+                        ? `${item.duration} minutes`
+                        : ""}
+                    </span>
+
+                    <span className="selected-label">
+                      {service === item.serviceName
+                        ? "✓ Selected"
+                        : "Select service"}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           </section>
 
+          {/* Booking Form */}
           <section className="booking-form">
             <h2>Your Details</h2>
 
@@ -425,6 +559,7 @@ export default function BookAppointment() {
                 />
               </div>
 
+              {/* Booking Summary */}
               <div className="booking-summary">
                 <span>
                   {service || "No service selected"}
@@ -432,19 +567,25 @@ export default function BookAppointment() {
 
                 <strong>
                   ₹
-                  {(
-                    services.find((item) => item.name === service)?.price || 0
+                  {Number(
+                    services.find(
+                      (item) => item.serviceName === service
+                    )?.price || 0
                   ).toLocaleString("en-IN")}
                 </strong>
               </div>
 
-              <button className="booking-button" type="submit">
+              <button
+                className="booking-button"
+                type="submit"
+                disabled={loading || services.length === 0}
+              >
                 Book Appointment
               </button>
 
               <p className="booking-note">
-                Frontend only. No backend or database is connected.
-                Submitting this form does not create a real booking.
+                Service details are loaded from your backend.
+                Appointment submission is not connected yet.
               </p>
             </form>
           </section>
