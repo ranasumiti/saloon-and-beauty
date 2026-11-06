@@ -2,9 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {Register} from "../../services/AuthService"
-
-
+import { Register } from "../../services/AuthService";
 
 export default function Registers() {
   const nav = useNavigate();
@@ -14,40 +12,53 @@ export default function Registers() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [userType, setUserType] = useState("3");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
-     if(password!==confirmPassword){
-  setMessage("please fill valid password")
-  return;
- }
-try{
-const payload={
-  email:email,
-  phone:phone,
-  name:name,
-  password:password,
-}
- const res=await Register(payload )
-console.log("REGISTER RESPONSE:", res);
- if(res.success== true){
-  toast.success("Register successful!");
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match");
+      toast.error("Passwords do not match");
+      return;
+    }
 
-  nav("/login")
- }
- else{
-  toast.error("unsucccessfull ")
-  
- }
-}
-catch (err) {
-  console.log("ERROR:", err);
-  console.log("BACKEND ERROR:", err.response?.data);
-  toast.error("Registration failed");
-}
-  
+    if (password.length < 10) {
+      setMessage("Password must contain at least 10 characters");
+      toast.error("Password must contain at least 10 characters");
+      return;
+    }
+
+    try {
+      const payload = {
+        email,
+        phone,
+        name,
+        password,
+        userType: Number(userType),
+      };
+
+      const res = await Register(payload);
+      console.log("REGISTER RESPONSE:", res);
+
+      const responseData = res.data ?? res;
+
+      if (
+        responseData.success === true ||
+        responseData.status === true
+      ) {
+        toast.success("Registration successful!");
+        setTimeout(() => nav("/login"), 1000);
+      } else {
+        toast.error(responseData.message || "Registration unsuccessful");
+      }
+    } catch (err) {
+      console.log("ERROR:", err);
+      console.log("BACKEND ERROR:", err.response?.data);
+      toast.error(err.response?.data?.message || "Registration failed");
+    }
   };
 
   return (
@@ -55,18 +66,26 @@ catch (err) {
       <div className="bg-register-page">
         <div className="bg-register-card">
 
+          {/* Left Image Section */}
           <div className="bg-register-image">
             <div className="bg-reg-flower">✿</div>
-            <h1>Beauty <span>&</span> Glow</h1>
+
+            <h1>
+              Beauty <span>&</span> Glow
+            </h1>
+
             <p className="bg-reg-tagline">
               BEAUTY · CARE · CONFIDENCE
             </p>
+
             <div className="bg-reg-line"></div>
+
             <h3>
               Join Our Community<br />
               And Start Your<br />
               Beauty Journey
             </h3>
+
             <p className="bg-reg-note">
               Look Good.<br />
               Feel Good.<br />
@@ -74,11 +93,14 @@ catch (err) {
             </p>
           </div>
 
+          {/* Registration Form */}
           <div className="bg-register-content">
             <p className="bg-reg-small">
               YOUR BEAUTY JOURNEY STARTS HERE
             </p>
+
             <h2>Create Account</h2>
+
             <p className="bg-reg-description">
               Join us to book appointments, explore services and get beauty tips.
             </p>
@@ -116,7 +138,7 @@ catch (err) {
                 placeholder="Password (minimum 10 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={/^[0-9]{10}$/}
+                minLength={10}
                 autoComplete="new-password"
                 required
               />
@@ -126,16 +148,78 @@ catch (err) {
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={/^[0-9]{10}$/}
+                minLength={10}
                 autoComplete="new-password"
                 required
               />
 
+              {/* Register As - directly below Confirm Password */}
+              <div className="bg-role-section">
+                <h3 className="bg-role-heading">Register As</h3>
+
+                <p className="bg-role-subtitle">
+                  Choose your account type
+                </p>
+
+                <div className="bg-role-grid">
+
+                  <button
+                    type="button"
+                    className={`bg-role-card ${
+                      userType === "3" ? "selected" : ""
+                    }`}
+                    onClick={() => setUserType("3")}
+                  >
+                    <span className="bg-role-icon">♕</span>
+                    <strong>Student</strong>
+                    <small>Learn beauty skills</small>
+                    {userType === "3" && (
+                      <span className="bg-role-check">✓</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`bg-role-card ${
+                      userType === "4" ? "selected" : ""
+                    }`}
+                    onClick={() => setUserType("4")}
+                  >
+                    <span className="bg-role-icon">✦</span>
+                    <strong>Beautician</strong>
+                    <small>Teach and create</small>
+                    {userType === "4" && (
+                      <span className="bg-role-check">✓</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`bg-role-card ${
+                      userType === "2" ? "selected" : ""
+                    }`}
+                    onClick={() => setUserType("2")}
+                  >
+                    <span className="bg-role-icon">♡</span>
+                    <strong>User</strong>
+                    <small>Book beauty services</small>
+                    {userType === "2" && (
+                      <span className="bg-role-check">✓</span>
+                    )}
+                  </button>
+
+                </div>
+              </div>
+
+              {/* Terms & Conditions */}
               <label className="bg-reg-terms">
                 <input type="checkbox" required />
+
                 <span>
-                  I agree to the <Link to="/terms">Terms & Conditions</Link>
-                  {" "}and <Link to="/privacy">Privacy Policy</Link>.
+                  I agree to the{" "}
+                  <Link to="/terms">Terms & Conditions</Link>
+                  {" "}and{" "}
+                  <Link to="/privacy">Privacy Policy</Link>.
                 </span>
               </label>
 
@@ -304,6 +388,93 @@ catch (err) {
           box-shadow: 0 0 0 3px #C6A66B20;
         }
 
+        /* Elegant Role Selection Cards */
+        .bg-role-section {
+          margin: 12px 0 8px;
+        }
+
+        .bg-role-heading {
+          font: 400 20px Georgia, serif;
+          color: #4A342A;
+          margin: 0 0 5px;
+        }
+
+        .bg-role-subtitle {
+          font-size: 12px;
+          color: #958477;
+          margin: 0 0 12px;
+        }
+
+        .bg-role-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+
+        .bg-role-card {
+          position: relative;
+          min-width: 0;
+          min-height: 112px;
+          padding: 13px 5px;
+          border: 1px solid #E5D6C5;
+          border-radius: 12px;
+          background: #FFFCF7;
+          color: #4A342A;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+
+        .bg-role-card:hover {
+          border-color: #C6A66B;
+          transform: translateY(-3px);
+          box-shadow: 0 5px 14px #4A342A12;
+        }
+
+        .bg-role-card.selected {
+          border: 1.5px solid #B08B50;
+          background: #F7EFE3;
+          box-shadow: 0 4px 13px #B08B5020;
+        }
+
+        .bg-role-icon {
+          font-size: 25px;
+          line-height: 1;
+          color: #A47B48;
+        }
+
+        .bg-role-card strong {
+          font-size: 12px;
+          font-weight: 600;
+          text-align: center;
+        }
+
+        .bg-role-card small {
+          font-size: 10px;
+          line-height: 1.3;
+          color: #8B796C;
+          text-align: center;
+        }
+
+        .bg-role-check {
+          position: absolute;
+          top: 6px;
+          right: 7px;
+          width: 17px;
+          height: 17px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #795548;
+          color: #FFFDF9;
+          font-size: 11px;
+        }
+
         .bg-reg-terms {
           display: flex;
           align-items: flex-start;
@@ -451,6 +622,22 @@ catch (err) {
           .bg-reg-tagline {
             font-size: 9px;
             letter-spacing: 1.5px;
+          }
+
+          .bg-role-grid {
+            gap: 5px;
+          }
+
+          .bg-role-card {
+            padding: 11px 3px;
+          }
+
+          .bg-role-card strong {
+            font-size: 11px;
+          }
+
+          .bg-role-card small {
+            font-size: 9px;
           }
         }
       `}</style>

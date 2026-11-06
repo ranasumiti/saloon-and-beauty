@@ -104,7 +104,7 @@ export default function App() {
 
         {/* Beautician Routes */}
         <Route path="/beautician" element={<BeauticianLayout />}>
-          <Route path="dashboard" element={<BeauticianDashboard />} />
+          <Route index element ={<BeauticianDashboard />} />
           <Route path="appointments" element={<MyAppointments />} />
           <Route path="schedule" element={<MySchedule />} />
           <Route path="clients" element={<MyClients />} />

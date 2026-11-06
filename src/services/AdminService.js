@@ -6,7 +6,9 @@ import {
   SINGLESERVICE,
   UPDATESERVICE,
   HARDDELETE,
-  SOFTDELETE
+  SOFTDELETE,
+  COURSES,
+  COURSESALL
 } from "../endpoints";
 
 function getToken() {
@@ -39,4 +41,14 @@ export function HardDeleteService(data) {
 
 export function SoftDeleteService(data) {
   return axios.post(ADMIN_BASE_URL + SOFTDELETE, data, getToken());
+}
+
+
+export function Courseadd(data) {
+  return axios.post(ADMIN_BASE_URL + COURSES, data, getToken());
+}
+
+
+export function AllCourse(data) {
+  return axios.post(ADMIN_BASE_URL + COURSESALL, data, getToken());
 }

@@ -65,7 +65,6 @@ useEffect(() => {
         <h2>{item.serviceName}</h2>
 
         <p>{item.description}</p>
-
         <span className="glow-gold-line"></span>
 
         <strong className="glow-price">

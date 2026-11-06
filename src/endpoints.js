@@ -11,5 +11,10 @@ export const UPDATESERVICE = "/service/update";
 export const HARDDELETE = "/service/harddelete";
 export const SOFTDELETE = "/service/softdelete";
 
+
+// course api
+
+export const COURSES = "/course/add";
+export const COURSESALL = "/course/add";
 export const REGISTER = "/register";
 export const LOGIN = "/login";
