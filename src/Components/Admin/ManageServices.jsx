@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {  AllServices } from "../../services/AdminService";
+import {  AllServices, SoftDeleteService } from "../../services/AdminService";
 import { toast } from "react-toastify";
 
 
@@ -10,7 +10,7 @@ export default function ManageServices() {
   const [category, setCategory] = useState("All");
   const [loading, setLoading] = useState(false);
 
-  // Get services from backend
+  
  const fetchServices = async () => {
   try {
     setLoading(true);
@@ -84,13 +84,28 @@ export default function ManageServices() {
   };
 
   // Temporary frontend delete
-  const deleteService = (id) => {
-    if (window.confirm("Are you sure you want to delete this service?")) {
-      setServices((previous) =>
-        previous.filter((service) => service._id !== id)
-      );
+  
+const deleteService = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this service?")) {
+    return;
+  }
+
+  try {
+    const res = await SoftDeleteService({ _id: id });
+
+    if (res.data.success) {
+      toast.success("Service deleted successfully!");
+      fetchServices();
+    } else {
+      toast.error(res.data.message || "Unable to delete service");
     }
-  };
+
+  } catch (error) {
+    console.log("Delete Error:", error);
+    toast.error(error.response?.data?.message || "Delete failed");
+  }
+};
+
 
   return (
     <div className="manage-services-page">

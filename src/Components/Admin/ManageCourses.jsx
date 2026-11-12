@@ -1,46 +1,52 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { AllCourse } from "../../services/AdminService";
+import { toast } from "react-toastify";
 
 export default function ManageCourses() {
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      title: "Professional Makeup Course",
-      category: "Makeup",
-      duration: "3 Months",
-      price: 15000,
-      status: "Active",
-    },
-    {
-      id: 2,
-      title: "Hair Styling Course",
-      category: "Hair",
-      duration: "2 Months",
-      price: 10000,
-      status: "Active",
-    },
-    {
-      id: 3,
-      title: "Skin Care Course",
-      category: "Skin",
-      duration: "1 Month",
-      price: 7000,
-      status: "Inactive",
-    },
-  ]);
 
+  const [courses, setCourses] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(false);
 
+  
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+
+      const res = await AllCourse({});
+
+      if (res.data.success) {
+        setCourses(res.data.data || []);
+      } else {
+        toast.error(res.data.message || "Unable to fetch courses");
+      }
+
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to load courses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  // Get categories
   const categories = [
-    ...new Set(courses.map((item) => item.category)),
+    ...new Set(courses.map((item) => item.category).filter(Boolean))
   ];
 
+  // Search and filter
   const filteredCourses = courses.filter((item) => {
+
     const matchesSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase());
+      (item.title || "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.category || "").toLowerCase().includes(search.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "All" ||
@@ -49,28 +55,31 @@ export default function ManageCourses() {
     return matchesSearch && matchesCategory;
   });
 
-  const toggleStatus = (id) => {
-    setCourses((previousCourses) =>
-      previousCourses.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status:
-                item.status === "Active" ? "Inactive" : "Active",
-            }
-          : item
-      )
-    );
+  // Status check
+  const isActive = (status) => {
+    return status === true || status === "true" || status === "Active";
   };
-
-  const deleteCourse = (id) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      setCourses((previousCourses) =>
-        previousCourses.filter((item) => item.id !== id)
-      );
+const deletecourse = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) {
+        return;
     }
-  };
 
+    try {
+        const res = await SoftDeletecourse({ _id: id });
+
+        if (res.data.success) {
+            toast.success("Course deleted successfully!");
+            fetchCourses();
+        } else {
+            toast.error(res.data.message || "Unable to delete course");
+        }
+
+    } catch (error) {
+        console.log("Delete Error:", error);
+        toast.error(error.response?.data?.message || "Delete failed");
+    }
+};
+ 
   return (
     <>
       <style>{`
@@ -267,35 +276,11 @@ export default function ManageCourses() {
           text-decoration: none;
           white-space: nowrap;
           cursor: pointer;
-          transition: 0.2s;
         }
 
         .course-edit-btn {
           background: #f4e8d7;
           color: #78552e;
-        }
-
-        .course-edit-btn:hover {
-          background: #e8d3b8;
-          color: #593c20;
-        }
-
-        .course-toggle-btn {
-          background: #eee7dc;
-          color: #654c36;
-        }
-
-        .course-toggle-btn:hover {
-          background: #dfd0bb;
-        }
-
-        .course-delete-btn {
-          background: #f8e5e2;
-          color: #b13d32;
-        }
-
-        .course-delete-btn:hover {
-          background: #f0ceca;
         }
 
         .course-no-data {
@@ -356,6 +341,7 @@ export default function ManageCourses() {
       `}</style>
 
       <div className="manage-courses">
+
         <div className="course-page-header">
           <div>
             <h2>Manage Courses</h2>
@@ -369,6 +355,7 @@ export default function ManageCourses() {
 
         {/* Course Statistics */}
         <div className="course-stats">
+
           <div className="course-stat-card">
             <h3>{courses.length}</h3>
             <p>Total Courses</p>
@@ -376,21 +363,23 @@ export default function ManageCourses() {
 
           <div className="course-stat-card">
             <h3>
-              {courses.filter((item) => item.status === "Active").length}
+              {courses.filter((item) => isActive(item.status)).length}
             </h3>
             <p>Active Courses</p>
           </div>
 
           <div className="course-stat-card">
             <h3>
-              {courses.filter((item) => item.status === "Inactive").length}
+              {courses.filter((item) => !isActive(item.status)).length}
             </h3>
             <p>Inactive Courses</p>
           </div>
+
         </div>
 
         {/* Search and Category Filter */}
         <div className="course-filter-bar">
+
           <input
             type="text"
             placeholder="Search course or category..."
@@ -409,12 +398,16 @@ export default function ManageCourses() {
                 {category}
               </option>
             ))}
+
           </select>
+
         </div>
 
         {/* Courses Table */}
         <div className="course-table-wrapper">
+
           <table className="course-table">
+
             <thead>
               <tr>
                 <th>#</th>
@@ -428,67 +421,94 @@ export default function ManageCourses() {
             </thead>
 
             <tbody>
-              {filteredCourses.length > 0 ? (
-                filteredCourses.map((course) => (
-                  <tr key={course.id}>
-                    <td>{course.id}</td>
+
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="course-no-data">
+                    Loading courses...
+                  </td>
+                </tr>
+              ) : filteredCourses.length > 0 ? (
+
+                filteredCourses.map((course, index) => (
+
+                  <tr key={course._id}>
+                    <td>{index + 1}</td>
                     <td>{course.title}</td>
                     <td>{course.category}</td>
                     <td>{course.duration}</td>
-                    <td>₹{course.price.toLocaleString("en-IN")}</td>
 
                     <td>
-                      <span
-                        className={
-                          course.status === "Active"
-                            ? "course-status active"
-                            : "course-status inactive"
-                        }
-                      >
-                        {course.status}
+                      ₹{Number(course.price || 0).toLocaleString("en-IN")}
+                    </td>
+
+                    <td>
+                      <span className={
+                        isActive(course.status)
+                          ? "course-status active"
+                          : "course-status inactive"
+                      }>
+                        {isActive(course.status) ? "Active" : "Inactive"}
                       </span>
                     </td>
 
                     <td>
                       <div className="course-actions">
+
                         <Link
-                          to={`/admin/editcourse/${course.id}`}
+                          to={`/admin/editcourse/${course._id}`}
                           className="course-action-btn course-edit-btn"
                         >
                           Edit
                         </Link>
 
-                        <button
-                          type="button"
-                          className="course-action-btn course-toggle-btn"
-                          onClick={() => toggleStatus(course.id)}
-                        >
-                          {course.status === "Active"
-                            ? "Deactivate"
-                            : "Activate"}
-                        </button>
+                         <button
+            className="course-action-btn"
+            style={{
+                background: course.status ? "#fff0dc" : "#e8f4e9",
+                color: course.status ? "#a66b20" : "#347343"
+            }}
+            onClick={() => toggleCourseStatus(course)}
+        >
+            {course.status ? "Deactivate" : "Activate"}
+        </button>
 
-                        <button
-                          type="button"
-                          className="course-action-btn course-delete-btn"
-                          onClick={() => deleteCourse(course.id)}
-                        >
-                          Delete
-                        </button>
+        
+<button
+            className="course-action-btn"
+            style={{
+                background: "#f5e8e4",
+                color: "#a34d3f"
+            }}
+            onClick={() => deletecourse(course._id)}
+        >
+            Delete
+        </button>
+
+
                       </div>
                     </td>
+
                   </tr>
+
                 ))
+
               ) : (
+
                 <tr>
                   <td colSpan="7" className="course-no-data">
                     No courses found.
                   </td>
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
+
       </div>
     </>
   );
