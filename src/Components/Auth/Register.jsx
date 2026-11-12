@@ -14,7 +14,10 @@ export default function Registers() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [userType, setUserType] = useState("3");
   const [message, setMessage] = useState("");
+  const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Registration Function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -31,33 +34,93 @@ export default function Registers() {
       return;
     }
 
+    if (!/^[0-9]{10}$/.test(phone)) {
+      setMessage("Please enter a valid 10 digit phone number");
+      toast.error("Please enter a valid 10 digit phone number");
+      return;
+    }
+
+    // if (!agree) {
+    //   setMessage("Please accept Terms & Conditions");
+    //   toast.error("Please accept Terms & Conditions");
+    //   return;
+    // }
+
     try {
+      setLoading(true);
+
       const payload = {
-        email,
-        phone,
-        name,
-        password,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password: password,
         userType: Number(userType),
       };
 
       const res = await Register(payload);
+
       console.log("REGISTER RESPONSE:", res);
 
-      const responseData = res.data ?? res;
+      // Axios response handle
+      const responseData = res?.data ?? res;
 
-      if (
-        responseData.success === true ||
-        responseData.status === true
-      ) {
-        toast.success("Registration successful!");
-        setTimeout(() => nav("/login"), 1000);
+      // Check backend success response
+     const isSuccess =
+  responseData?.success === true ||
+  responseData?.status === 200 ||
+  responseData?.status === true;
+
+if (isSuccess) {
+  const roleName =
+    userType === "2"
+      ? "User"
+      : userType === "3"
+      ? "Student"
+      : "Beautician";
+
+  toast.success(`${roleName} registered successfully!`);
+
+  nav("/login", {
+    state: {
+      userType: Number(userType),
+    },
+  });
+
+        // Login page te navigate
+        setTimeout(() => {
+          nav("/login", {
+            state: {
+              userType: Number(userType),
+            },
+          });
+        }, 1000);
+
       } else {
-        toast.error(responseData.message || "Registration unsuccessful");
+        const errorMessage = responseData?.message;
+
+        const finalMessage = Array.isArray(errorMessage)
+          ? errorMessage.join(", ")
+          : errorMessage || "Registration unsuccessful";
+
+        setMessage(finalMessage);
+        toast.error(finalMessage);
       }
+
     } catch (err) {
-      console.log("ERROR:", err);
+      console.log("REGISTER ERROR:", err);
       console.log("BACKEND ERROR:", err.response?.data);
-      toast.error(err.response?.data?.message || "Registration failed");
+
+      const errorMessage = err.response?.data?.message;
+
+      const finalMessage = Array.isArray(errorMessage)
+        ? errorMessage.join(", ")
+        : errorMessage || "Registration failed";
+
+      setMessage(finalMessage);
+      toast.error(finalMessage);
+
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,6 +158,7 @@ export default function Registers() {
 
           {/* Registration Form */}
           <div className="bg-register-content">
+
             <p className="bg-reg-small">
               YOUR BEAUTY JOURNEY STARTS HERE
             </p>
@@ -106,6 +170,8 @@ export default function Registers() {
             </p>
 
             <form onSubmit={handleSubmit}>
+
+              {/* Name */}
               <input
                 type="text"
                 placeholder="Full name"
@@ -115,6 +181,7 @@ export default function Registers() {
                 required
               />
 
+              {/* Email */}
               <input
                 type="email"
                 placeholder="Email address"
@@ -124,15 +191,20 @@ export default function Registers() {
                 required
               />
 
+              {/* Phone */}
               <input
                 type="tel"
                 placeholder="Phone number"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) =>
+                  setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                }
                 autoComplete="tel"
+                maxLength={10}
                 required
               />
 
+              {/* Password */}
               <input
                 type="password"
                 placeholder="Password (minimum 10 characters)"
@@ -143,6 +215,7 @@ export default function Registers() {
                 required
               />
 
+              {/* Confirm Password */}
               <input
                 type="password"
                 placeholder="Confirm password"
@@ -153,9 +226,12 @@ export default function Registers() {
                 required
               />
 
-              {/* Register As - directly below Confirm Password */}
+              {/* Register As */}
               <div className="bg-role-section">
-                <h3 className="bg-role-heading">Register As</h3>
+
+                <h3 className="bg-role-heading">
+                  Register As
+                </h3>
 
                 <p className="bg-role-subtitle">
                   Choose your account type
@@ -163,6 +239,7 @@ export default function Registers() {
 
                 <div className="bg-role-grid">
 
+                  {/* Student */}
                   <button
                     type="button"
                     className={`bg-role-card ${
@@ -171,13 +248,17 @@ export default function Registers() {
                     onClick={() => setUserType("3")}
                   >
                     <span className="bg-role-icon">♕</span>
+
                     <strong>Student</strong>
+
                     <small>Learn beauty skills</small>
+
                     {userType === "3" && (
                       <span className="bg-role-check">✓</span>
                     )}
                   </button>
 
+                  {/* Beautician */}
                   <button
                     type="button"
                     className={`bg-role-card ${
@@ -186,13 +267,17 @@ export default function Registers() {
                     onClick={() => setUserType("4")}
                   >
                     <span className="bg-role-icon">✦</span>
+
                     <strong>Beautician</strong>
+
                     <small>Teach and create</small>
+
                     {userType === "4" && (
                       <span className="bg-role-check">✓</span>
                     )}
                   </button>
 
+                  {/* User / Customer */}
                   <button
                     type="button"
                     className={`bg-role-card ${
@@ -201,8 +286,11 @@ export default function Registers() {
                     onClick={() => setUserType("2")}
                   >
                     <span className="bg-role-icon">♡</span>
+
                     <strong>User</strong>
+
                     <small>Book beauty services</small>
+
                     {userType === "2" && (
                       <span className="bg-role-check">✓</span>
                     )}
@@ -213,7 +301,12 @@ export default function Registers() {
 
               {/* Terms & Conditions */}
               <label className="bg-reg-terms">
-                <input type="checkbox" required />
+
+                <input
+                  type="checkbox"
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
+                />
 
                 <span>
                   I agree to the{" "}
@@ -221,15 +314,25 @@ export default function Registers() {
                   {" "}and{" "}
                   <Link to="/privacy">Privacy Policy</Link>.
                 </span>
+
               </label>
 
-              <button className="bg-reg-submit" type="submit">
-                Register <span>→</span>
+              {/* Register Button */}
+              <button
+                className="bg-reg-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Please Wait..." : "Register"}
+                <span>→</span>
               </button>
 
               {message && (
-                <p className="bg-reg-message">{message}</p>
+                <p className="bg-reg-message">
+                  {message}
+                </p>
               )}
+
             </form>
 
             <div className="bg-reg-or">
@@ -239,9 +342,10 @@ export default function Registers() {
             <button
               className="bg-reg-google"
               type="button"
-              onClick={() =>
-                setMessage("Google registration is not connected yet.")
-              }
+              onClick={() => {
+                setMessage("Google registration is not connected yet.");
+                toast.info("Google registration is not connected yet.");
+              }}
             >
               <b>G</b> Continue with Google
             </button>
@@ -250,11 +354,13 @@ export default function Registers() {
               Already have an account?
               <Link to="/login"> Login here</Link>
             </p>
+
           </div>
         </div>
       </div>
 
       <style>{`
+
         .bg-register-page {
           min-height: 100vh;
           padding: 30px 18px;
@@ -388,7 +494,6 @@ export default function Registers() {
           box-shadow: 0 0 0 3px #C6A66B20;
         }
 
-        /* Elegant Role Selection Cards */
         .bg-role-section {
           margin: 12px 0 8px;
         }
@@ -520,6 +625,11 @@ export default function Registers() {
           border-color: #4A342A;
         }
 
+        .bg-reg-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
         .bg-reg-submit span {
           margin-left: 8px;
           color: #E8D1A5;
@@ -640,6 +750,7 @@ export default function Registers() {
             font-size: 9px;
           }
         }
+
       `}</style>
     </>
   );

@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const nav = useNavigate();
 
@@ -14,53 +15,88 @@ export default function Login() {
     e.preventDefault();
 
     try {
+      setLoading(true);
+
       const payload = {
-        email: email,
-        password: password,
+        email: email.trim(),
+        password,
       };
 
+      // Login API call - only once
       const res = await login(payload);
 
-      if (res.success) {
-        const user = res.data;
+      console.log("LOGIN RESPONSE:", res);
 
-        let responseData = {
-          token: res.token,
-          userType: user.userType,
-          name: user.name,
-          email: user.email,
+      // Backend response check
+      if (res?.success === true) {
+        const user = res.data || {};
+
+        const loginData = {
+          token: res.token || user.token || "",
+          userType: Number(res.userType ?? user.userType),
+          name: user.name || res.name || "",
+          email: user.email || res.email || email,
         };
 
-        if (!responseData.token) {
+        // Token check
+        if (!loginData.token) {
           toast.error("Login token not received");
           return;
         }
 
-        setData(responseData);
+        // Save login details
+        setData(loginData);
 
-        if (responseData.userType === 1) {
-          toast.success("Admin login successful");
-          nav("/admin");
-        } else if (responseData.userType === 4) {
-          toast.success("Beautician login successful");
-          nav("/beautician/dashboard");
-        } else if (responseData.userType === 2) {
-          toast.success("User login successful");
-          nav("/");
-        } else if (responseData.userType === 3) {
-          toast.success("Student login successful");
-          nav("/student");
-        } else {
+        // Admin
+        if (loginData.userType === 1) {
+          toast.success("Admin login successful!");
+          nav("/admin", { replace: true });
+        }
+
+        // Customer / User
+        else if (loginData.userType === 2) {
+          toast.success("User login successful!");
+          nav("/", { replace: true });
+        }
+
+        // Student
+        else if (loginData.userType === 3) {
+          toast.success("Student login successful!");
+          nav("/", { replace: true });
+        }
+
+        // Beautician
+        else if (loginData.userType === 4) {
+          toast.success("Beautician login successful!");
+          nav("/beautician", { replace: true });
+        }
+
+        // Invalid role
+        else {
           toast.error("Invalid user type");
         }
+
       } else {
-        toast.error(res.message || "Login failed");
+        toast.error(res?.message || "Login failed");
       }
+
     } catch (error) {
-      console.log(error);
+      console.log("LOGIN ERROR:", error);
+      console.log("BACKEND ERROR:", error.response?.data);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong";
+
       toast.error(
-        error.response?.data?.message || "Something went wrong"
+        Array.isArray(errorMessage)
+          ? errorMessage.join(", ")
+          : errorMessage
       );
+
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,6 +105,7 @@ export default function Login() {
       <div className="bg-login-page">
         <div className="bg-login-card">
 
+          {/* Left Image Section */}
           <div className="bg-login-image">
             <div className="bg-flower">✿</div>
 
@@ -93,8 +130,12 @@ export default function Login() {
             </p>
           </div>
 
+          {/* Login Form */}
           <div className="bg-login-content">
-            <p className="bg-small-title">WELCOME BACK</p>
+
+            <p className="bg-small-title">
+              WELCOME BACK
+            </p>
 
             <h2>Welcome Back</h2>
 
@@ -103,23 +144,30 @@ export default function Login() {
             </p>
 
             <form onSubmit={handleSubmit}>
+
+              {/* Email */}
               <input
                 type="email"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
               />
 
+              {/* Password */}
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
 
+              {/* Login Options */}
               <div className="bg-login-options">
+
                 <label>
                   <input type="checkbox" />
                   Remember me
@@ -128,23 +176,33 @@ export default function Login() {
                 <Link to="/forgot-password">
                   Forgot password?
                 </Link>
+
               </div>
 
-              <button className="bg-submit-btn" type="submit">
-                Login <span>→</span>
+              {/* Login Button */}
+              <button
+                className="bg-submit-btn"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Please Wait..." : "Login"}
+                <span>→</span>
               </button>
+
             </form>
 
+            {/* Register Link */}
             <p className="bg-switch">
               Don't have an account?
               <Link to="/register"> Register here</Link>
             </p>
-          </div>
 
+          </div>
         </div>
       </div>
 
       <style>{`
+
         .bg-login-page {
           min-height: 100vh;
           padding: 35px 18px;
@@ -301,6 +359,11 @@ export default function Login() {
           background: #566442;
         }
 
+        .bg-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
         .bg-submit-btn span {
           margin-left: 8px;
         }
@@ -313,6 +376,7 @@ export default function Login() {
         }
 
         @media (max-width: 700px) {
+
           .bg-login-card {
             grid-template-columns: 1fr;
           }
@@ -334,7 +398,9 @@ export default function Login() {
           .bg-login-content {
             padding: 35px 24px;
           }
+
         }
+
       `}</style>
     </>
   );
