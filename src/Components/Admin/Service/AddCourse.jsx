@@ -1,18 +1,42 @@
 
-import {  Courseadd } from "../../../services/AdminService";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Courseadd } from "../../../services/AdminService";
 import { toast } from "react-toastify";
 
 export default function AddCourse() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [fee, setFee] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [duration, setDuration] = useState("");
   const [trainerId, setTrainerId] = useState("");
   const [status, setStatus] = useState("true");
   const [certification, setCertification] = useState("true");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+
+  // Fetch categories when component loads
+  useEffect(() => {
+    fetchcategory();
+  }, []);
+
+  const fetchcategory = async () => {
+    try {
+      const res = await AllCategory({});
+
+      console.log("Category Response:", res.data);
+
+      if (res.data.success) {
+        setCategories(res.data.data);
+      } else {
+        toast.error("Categories not found");
+      }
+    } catch (error) {
+      console.log("Category Error:", error);
+      toast.error("Unable to load categories");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +45,7 @@ export default function AddCourse() {
       !name.trim() ||
       !description.trim() ||
       !fee ||
+      !selectedCategory ||
       !duration.trim() ||
       !image
     ) {
@@ -39,6 +64,7 @@ export default function AddCourse() {
       formData.append("courseName", name);
       formData.append("description", description);
       formData.append("fee", Number(fee));
+      formData.append("category", selectedCategory);
       formData.append("duration", duration);
       formData.append("trainerId", trainerId);
       formData.append("status", status === "true");
@@ -55,6 +81,7 @@ export default function AddCourse() {
         setName("");
         setDescription("");
         setFee("");
+        setSelectedCategory("");
         setDuration("");
         setTrainerId("");
         setStatus("true");
@@ -80,6 +107,7 @@ export default function AddCourse() {
     setName("");
     setDescription("");
     setFee("");
+    setSelectedCategory("");
     setDuration("");
     setTrainerId("");
     setStatus("true");
@@ -137,7 +165,30 @@ export default function AddCourse() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Professional Makeup"
+                    required
                   />
+                </div>
+
+                {/* Category Dropdown */}
+
+                <div className="course-field">
+                  <label>Course Category *</label>
+
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) =>
+                      setSelectedCategory(e.target.value)
+                    }
+                    required
+                  >
+                    <option value="">Select Category</option>
+
+                    {categories.map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.categoryName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="course-field">
@@ -149,6 +200,7 @@ export default function AddCourse() {
                     value={fee}
                     onChange={(e) => setFee(e.target.value)}
                     placeholder="Enter course fee"
+                    required
                   />
                 </div>
 
@@ -160,6 +212,7 @@ export default function AddCourse() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe what students will learn..."
+                    required
                   />
                 </div>
 
@@ -171,6 +224,7 @@ export default function AddCourse() {
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     placeholder="e.g. 3 months"
+                    required
                   />
                 </div>
 
@@ -202,7 +256,9 @@ export default function AddCourse() {
 
                   <select
                     value={certification}
-                    onChange={(e) => setCertification(e.target.value)}
+                    onChange={(e) =>
+                      setCertification(e.target.value)
+                    }
                   >
                     <option value="true">Yes</option>
                     <option value="false">No</option>
@@ -383,25 +439,6 @@ export default function AddCourse() {
           min-width: 0;
         }
 
-        .course-card {
-          min-width: 0;
-          padding: 22px;
-          background: #fffdf9;
-          border: 1px solid #eadfd2;
-          border-radius: 12px;
-        }
-
-        .course-card h2 {
-          margin: 0 0 8px;
-          font-family: Georgia, serif;
-          font-size: 20px;
-        }
-
-        .course-subtitle {
-          margin: 0 0 22px;
-          line-height: 1.5;
-        }
-
         .course-fields {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -441,6 +478,25 @@ export default function AddCourse() {
 
         .full-width {
           grid-column: 1 / -1;
+        }
+
+        .course-card {
+          min-width: 0;
+          padding: 22px;
+          background: #fffdf9;
+          border: 1px solid #eadfd2;
+          border-radius: 12px;
+        }
+
+        .course-card h2 {
+          margin: 0 0 8px;
+          font-family: Georgia, serif;
+          font-size: 20px;
+        }
+
+        .course-subtitle {
+          margin: 0 0 22px;
+          line-height: 1.5;
         }
 
         .course-upload {
@@ -510,7 +566,6 @@ export default function AddCourse() {
         }
 
         @media (max-width: 1000px) {
-
           .course-layout {
             grid-template-columns: minmax(0, 1fr);
           }
@@ -518,11 +573,9 @@ export default function AddCourse() {
           .course-side {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
-
         }
 
         @media (max-width: 600px) {
-
           .add-course-page {
             padding: 14px;
           }
@@ -552,7 +605,6 @@ export default function AddCourse() {
           .course-actions button {
             width: 100%;
           }
-
         }
 
       `}</style>

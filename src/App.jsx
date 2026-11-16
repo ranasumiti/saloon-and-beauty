@@ -54,6 +54,8 @@ import MyClients from "./Components/Beauticians/MyClients";
 import MyEarnings from "./Components/Beauticians/MyEarnings";
 import MyProfile from "./Components/Beauticians/MyProfile";
 import BeauticianDashboard from "./Components/Beauticians/BeauticianDashboard";
+import CourseDetails from "./Components/User/CourseDetails";
+import StudentEnrollment from "./Components/User/StudentEnrollment";
 
 
 export default function App() {
@@ -71,7 +73,9 @@ export default function App() {
           <Route path="contact" element={<ContactUs />} />
           <Route path="services" element={<Services />} />
           <Route path="bookappointment" element={<BookAppointment />} />
+          <Route path="enrollstudent/:id" element={<StudentEnrollment/>}/>
           <Route path="servicedetail/:id" element={<ServiceDetails />} />
+          <Route path="coursedetails/:id" element={<CourseDetails/>}/>
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
         </Route>

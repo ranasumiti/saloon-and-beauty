@@ -434,7 +434,7 @@ const deletecourse = async (id) => {
 
                   <tr key={course._id}>
                     <td>{index + 1}</td>
-                    <td>{course.title}</td>
+                    <td>{course.courseName}</td>
                     <td>{course.category}</td>
                     <td>{course.duration}</td>
 

@@ -1,7 +1,8 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GetSingleService } from "../../services/AuthService";
+
+import { SingleService } from "../../services/AdminService";
 
 
 
@@ -49,7 +50,7 @@ const fetchService = async () => {
     setLoading(true);
     setService(null);
 
-    const res = await GetSingleService({ _id: id });
+    const res = await SingleService({ _id: id });
 
     console.log("Service Response:", res.data);
 

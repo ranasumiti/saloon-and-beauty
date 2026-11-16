@@ -23,4 +23,5 @@ export const SOFTDELETE = "/service/softdelete";
 
 export const COURSES = "/course/add";
 export const COURSESALL = "/course/all";
+export const SINGLECOURSE= "/course/single";
 

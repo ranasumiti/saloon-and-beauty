@@ -7,7 +7,8 @@ import {
   UPDATESERVICE,
   HARDDELETE,
   SOFTDELETE,
-  COURSESALL
+  COURSESALL,
+  SINGLECOURSE,
 } from "../endpoints";
 
 function getToken() {
@@ -51,3 +52,7 @@ export function Courseadd(data) {
 export function AllCourse(data) {
   return axios.post(ADMIN_BASE_URL + COURSESALL, data, getToken());
 }
+export function Singlecourse(data) {
+  return axios.post(ADMIN_BASE_URL + SINGLECOURSE, data, getToken());
+}
+
