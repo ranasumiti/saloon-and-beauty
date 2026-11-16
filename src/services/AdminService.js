@@ -7,7 +7,6 @@ import {
   UPDATESERVICE,
   HARDDELETE,
   SOFTDELETE,
-  COURSES,
   COURSESALL
 } from "../endpoints";
 

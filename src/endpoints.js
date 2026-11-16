@@ -22,5 +22,5 @@ export const SOFTDELETE = "/service/softdelete";
 // course api
 
 export const COURSES = "/course/add";
-export const COURSESALL = "/course/add";
+export const COURSESALL = "/course/all";
 
