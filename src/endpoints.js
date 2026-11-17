@@ -22,9 +22,6 @@ export const SOFTDELETE = "/service/softdelete";
 // Course APIs
 export const COURSES = "/course/add";
 export const COURSESALL = "/course/all";
-<<<<<<< HEAD
-export const SINGLECOURSE = "/course/single";
-=======
 export const SINGLECOURSE= "/course/single";
 export const COURSESOFTDELETE="/course/softdelete"
 export const UPDATECOURSE = "/course/update";
@@ -35,7 +32,7 @@ export const ALLADDAPOINTMENT="/appointment/all";
 export const UPDATEADDAPOINTMENT="/appointment/update";
 export const SOFTDELETEADDAPOINTMENT="/appointment/softdelete";
 
->>>>>>> c10d0da88f53eb0e109a7b5a5d2033f40d980539
+
 
 // Category API
 export const ALLCATEGORY = "/category/all";
