@@ -12,6 +12,13 @@ import {
   COURSES,
   COURSESALL,
   SINGLECOURSE,
+  COURSESOFTDELETE,
+  
+  UPDATECOURSE,
+  ADDAPOINTMENT,
+  ALLADDAPOINTMENT,
+  UPDATEADDAPOINTMENT,
+  SOFTDELETEADDAPOINTMENT,
 } from "../endpoints";
 
 function getToken() {
@@ -60,7 +67,32 @@ export function Singlecourse(data) {
   return axios.post(ADMIN_BASE_URL + SINGLECOURSE, data, getToken());
 }
 
+<<<<<<< HEAD
 // Category API
 export function AllCategory() {
   return axios.get(CATEGORY_BASE_URL + "/all", getToken());
 }
+=======
+export function SoftDeletecourse(data) {
+  return axios.post(ADMIN_BASE_URL + COURSESOFTDELETE, data, getToken());
+}
+
+export function Updatecoure(data) {
+  return axios.post(ADMIN_BASE_URL + UPDATECOURSE, data, getToken());
+}
+
+// appointments
+
+export function addappointment(data) {
+  return axios.post(ADMIN_BASE_URL + ADDAPOINTMENT, data, getToken());
+}
+export function allappointment(data) {
+  return axios.post(ADMIN_BASE_URL + ALLADDAPOINTMENT, data, getToken());
+}
+export function updateappointment(data) {
+  return axios.post(ADMIN_BASE_URL + UPDATEADDAPOINTMENT, data, getToken());
+}
+export function softdeleteappointment(data) {
+  return axios.post(ADMIN_BASE_URL + SOFTDELETEADDAPOINTMENT, data, getToken());
+}
+>>>>>>> c10d0da88f53eb0e109a7b5a5d2033f40d980539

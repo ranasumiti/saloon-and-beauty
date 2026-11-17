@@ -33,8 +33,8 @@ export default function AddCourse() {
         toast.error("Categories not found");
       }
     } catch (error) {
-      console.log("Category Error:", error);
-      toast.error("Unable to load categories");
+      console.log("Course Error:", error);
+      toast.error("Unable to load courses");
     }
   };
 
