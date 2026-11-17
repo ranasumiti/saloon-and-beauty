@@ -79,6 +79,8 @@ const deletecourse = async (id) => {
         toast.error(error.response?.data?.message || "Delete failed");
     }
 };
+
+
  
   return (
     <>
