@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Courseadd } from "../../../services/AdminService";
+import { Courseadd, AllCategory } from "../../../services/AdminService";
 import { toast } from "react-toastify";
 
 export default function AddCourse() {
@@ -184,7 +184,7 @@ export default function AddCourse() {
                     <option value="">Select Category</option>
 
                     {categories.map((item) => (
-                      <option key={item._id} value={item._id}>
+                      <option key={item._id} value={item.categoryName}>
                         {item.categoryName}
                       </option>
                     ))}

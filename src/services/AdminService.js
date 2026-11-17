@@ -1,12 +1,15 @@
+
 import axios from "axios";
 import {
   ADMIN_BASE_URL,
+  CATEGORY_BASE_URL,
   ALLSERVICES,
   SERVICES,
   SINGLESERVICE,
   UPDATESERVICE,
   HARDDELETE,
   SOFTDELETE,
+  COURSES,
   COURSESALL,
   SINGLECOURSE,
 } from "../endpoints";
@@ -14,11 +17,12 @@ import {
 function getToken() {
   return {
     headers: {
-      Authorization: localStorage.getItem("token")
-    }
+      Authorization: localStorage.getItem("token"),
+    },
   };
 }
 
+// Service APIs
 export function AddServices(data) {
   return axios.post(ADMIN_BASE_URL + SERVICES, data, getToken());
 }
@@ -43,16 +47,20 @@ export function SoftDeleteService(data) {
   return axios.post(ADMIN_BASE_URL + SOFTDELETE, data, getToken());
 }
 
-
+// Course APIs
 export function Courseadd(data) {
   return axios.post(ADMIN_BASE_URL + COURSES, data, getToken());
 }
 
-
 export function AllCourse(data) {
   return axios.post(ADMIN_BASE_URL + COURSESALL, data, getToken());
 }
+
 export function Singlecourse(data) {
   return axios.post(ADMIN_BASE_URL + SINGLECOURSE, data, getToken());
 }
 
+// Category API
+export function AllCategory() {
+  return axios.get(CATEGORY_BASE_URL + "/all", getToken());
+}
