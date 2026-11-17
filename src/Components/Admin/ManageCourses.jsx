@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { AllCourse } from "../../services/AdminService";
+import { AllCourse, SoftDeletecourse } from "../../services/AdminService";
 import { toast } from "react-toastify";
 
 export default function ManageCourses() {
@@ -79,6 +79,9 @@ const deletecourse = async (id) => {
         toast.error(error.response?.data?.message || "Delete failed");
     }
 };
+
+
+
 
 
  

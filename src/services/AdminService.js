@@ -9,6 +9,13 @@ import {
   SOFTDELETE,
   COURSESALL,
   SINGLECOURSE,
+  COURSESOFTDELETE,
+  
+  UPDATECOURSE,
+  ADDAPOINTMENT,
+  ALLADDAPOINTMENT,
+  UPDATEADDAPOINTMENT,
+  SOFTDELETEADDAPOINTMENT,
 } from "../endpoints";
 
 function getToken() {
@@ -56,3 +63,25 @@ export function Singlecourse(data) {
   return axios.post(ADMIN_BASE_URL + SINGLECOURSE, data, getToken());
 }
 
+export function SoftDeletecourse(data) {
+  return axios.post(ADMIN_BASE_URL + COURSESOFTDELETE, data, getToken());
+}
+
+export function Updatecoure(data) {
+  return axios.post(ADMIN_BASE_URL + UPDATECOURSE, data, getToken());
+}
+
+// appointments
+
+export function addappointment(data) {
+  return axios.post(ADMIN_BASE_URL + ADDAPOINTMENT, data, getToken());
+}
+export function allappointment(data) {
+  return axios.post(ADMIN_BASE_URL + ALLADDAPOINTMENT, data, getToken());
+}
+export function updateappointment(data) {
+  return axios.post(ADMIN_BASE_URL + UPDATEADDAPOINTMENT, data, getToken());
+}
+export function softdeleteappointment(data) {
+  return axios.post(ADMIN_BASE_URL + SOFTDELETEADDAPOINTMENT, data, getToken());
+}

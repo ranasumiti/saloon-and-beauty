@@ -1,37 +1,51 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  allappointment
+  
+} from "../../services/AdminService";
+import { toast } from "react-toastify";
 
 export default function ManageAppointments() {
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      name: "Priya Sharma",
-      phone: "9876543210",
-      service: "Hair Styling",
-      date: "2026-10-30",
-      time: "11:00",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      name: "Simran Kaur",
-      phone: "9876501234",
-      service: "Facial",
-      date: "2026-10-31",
-      time: "14:00",
-      status: "Confirmed",
-    },
-  ]);
 
+  const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [loading, setLoading] = useState(false);
 
+  // Get all appointments
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+
+      const res = await allappointment({});
+
+      if (res.data.success) {
+        setAppointments(res.data.data || []);
+      } else {
+        toast.error(res.data.message || "Unable to load appointments");
+      }
+
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong while loading appointments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  // Search and filter appointments
   const filteredAppointments = appointments.filter((item) => {
+
     const matchesSearch =
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.service.toLowerCase().includes(search.toLowerCase()) ||
-      item.phone.includes(search);
+      (item.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.serviceName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.phone || "").includes(search);
 
     const matchesStatus =
       statusFilter === "All" || item.status === statusFilter;
@@ -39,24 +53,12 @@ export default function ManageAppointments() {
     return matchesSearch && matchesStatus;
   });
 
-  const updateStatus = (id, status) => {
-    setAppointments((previous) =>
-      previous.map((item) =>
-        item.id === id ? { ...item, status } : item
-      )
-    );
-  };
-
-  const deleteAppointment = (id) => {
-    if (window.confirm("Are you sure you want to delete this appointment?")) {
-      setAppointments((previous) =>
-        previous.filter((item) => item.id !== id)
-      );
-    }
-  };
+ 
+  
 
   return (
     <div className="manage-appointments">
+
       <style>{`
         .manage-appointments {
           padding: 28px;
@@ -134,8 +136,7 @@ export default function ManageAppointments() {
         }
 
         .appointment-search,
-        .appointment-filter,
-        .appointment-status-select {
+        .appointment-filter {
           padding: 10px 12px;
           border: 1px solid #e3d8cb;
           border-radius: 7px;
@@ -187,7 +188,7 @@ export default function ManageAppointments() {
           color: #936316;
         }
 
-        .appointment-status.confirmed {
+        .appointment-status.approved {
           background: #e8f5e9;
           color: #2e7d32;
         }
@@ -197,6 +198,7 @@ export default function ManageAppointments() {
           color: #1565c0;
         }
 
+        .appointment-status.rejected,
         .appointment-status.cancelled {
           background: #fbe9e7;
           color: #c62828;
@@ -292,6 +294,7 @@ export default function ManageAppointments() {
         }
       `}</style>
 
+      {/* Header */}
       <div className="appointment-header">
         <div>
           <h2>Manage Appointments</h2>
@@ -299,7 +302,9 @@ export default function ManageAppointments() {
         </div>
       </div>
 
+      {/* Stats */}
       <div className="appointment-stats">
+
         <div className="appointment-stat">
           <p>Total Appointments</p>
           <h3>{appointments.length}</h3>
@@ -313,15 +318,19 @@ export default function ManageAppointments() {
         </div>
 
         <div className="appointment-stat">
-          <p>Confirmed</p>
+          <p>Approved</p>
           <h3>
-            {appointments.filter((a) => a.status === "Confirmed").length}
+            {appointments.filter((a) => a.status === "Approved").length}
           </h3>
         </div>
+
       </div>
 
+      {/* Appointment Table */}
       <div className="appointment-card">
+
         <div className="appointment-toolbar">
+
           <h3>All Appointments</h3>
 
           <input
@@ -339,14 +348,18 @@ export default function ManageAppointments() {
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
+
         </div>
 
         <div className="appointment-table-wrap">
+
           <table className="appointment-table">
+
             <thead>
               <tr>
                 <th>No.</th>
@@ -361,31 +374,40 @@ export default function ManageAppointments() {
             </thead>
 
             <tbody>
-              {filteredAppointments.length > 0 ? (
+
+              {loading ? (
+
+                <tr>
+                  <td colSpan="8" className="appointment-empty">
+                    Loading appointments...
+                  </td>
+                </tr>
+
+              ) : filteredAppointments.length > 0 ? (
+
                 filteredAppointments.map((item, index) => (
-                  <tr key={item.id}>
+
+                  <tr key={item._id}>
+
                     <td>{index + 1}</td>
                     <td>{item.name}</td>
                     <td>{item.phone}</td>
-                    <td>{item.service}</td>
+                    <td>{item.serviceName}</td>
                     <td>{item.date}</td>
                     <td>{item.time}</td>
+
+                    {/* Admin can only view status */}
                     <td>
-                      <select
-                        className="appointment-status-select"
-                        value={item.status}
-                        onChange={(e) =>
-                          updateStatus(item.id, e.target.value)
-                        }
+                      <span
+                        className={`appointment-status ${(item.status || "Pending").toLowerCase()}`}
                       >
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
+                        {item.status || "Pending"}
+                      </span>
                     </td>
+
                     <td>
                       <div className="appointment-actions">
+
                         <button
                           className="appointment-action-btn appointment-view"
                           onClick={() => setSelectedAppointment(item)}
@@ -393,44 +415,70 @@ export default function ManageAppointments() {
                           View
                         </button>
 
-                        <button
-                          className="appointment-action-btn appointment-delete"
-                          onClick={() => deleteAppointment(item.id)}
-                        >
-                          Delete
-                        </button>
+                        
+
                       </div>
                     </td>
+
                   </tr>
+
                 ))
+
               ) : (
+
                 <tr>
                   <td colSpan="8" className="appointment-empty">
                     No appointments found.
                   </td>
                 </tr>
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
       </div>
 
+      {/* View Appointment Modal */}
       {selectedAppointment && (
+
         <div
           className="appointment-modal-backdrop"
           onClick={() => setSelectedAppointment(null)}
         >
+
           <div
             className="appointment-modal"
             onClick={(e) => e.stopPropagation()}
           >
+
             <h3>Appointment Details</h3>
-            <p><strong>Customer:</strong> {selectedAppointment.name}</p>
-            <p><strong>Phone:</strong> {selectedAppointment.phone}</p>
-            <p><strong>Service:</strong> {selectedAppointment.service}</p>
-            <p><strong>Date:</strong> {selectedAppointment.date}</p>
-            <p><strong>Time:</strong> {selectedAppointment.time}</p>
-            <p><strong>Status:</strong> {selectedAppointment.status}</p>
+
+            <p>
+              <strong>Customer:</strong> {selectedAppointment.name}
+            </p>
+
+            <p>
+              <strong>Phone:</strong> {selectedAppointment.phone}
+            </p>
+
+            <p>
+              <strong>Service:</strong> {selectedAppointment.serviceName}
+            </p>
+
+            <p>
+              <strong>Date:</strong> {selectedAppointment.date}
+            </p>
+
+            <p>
+              <strong>Time:</strong> {selectedAppointment.time}
+            </p>
+
+            <p>
+              <strong>Status:</strong> {selectedAppointment.status || "Pending"}
+            </p>
 
             <button
               className="appointment-close"
@@ -438,9 +486,13 @@ export default function ManageAppointments() {
             >
               Close
             </button>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }

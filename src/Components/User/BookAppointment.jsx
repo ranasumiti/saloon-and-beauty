@@ -1,11 +1,15 @@
+
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import axios from "axios";
+import { useLocation, useNavigate } from "react-router-dom";
+import {  addappointment, AllServices } from "../../services/AdminService";
+import { toast } from "react-toastify";
 
-export default function BookAppointment() {
+function BookAppointment() {
+const nav = useNavigate();
   const location = useLocation();
-
   const passedService = location.state?.service;
+
+  const [services, setServices] = useState([]);
 
   const [service, setService] = useState(
     typeof passedService === "string"
@@ -13,88 +17,121 @@ export default function BookAppointment() {
       : passedService?.serviceName || passedService?.name || ""
   );
 
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
 
-  // Fetch Services From Backend
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState(false);
+
+  // Fetch all services
   useEffect(() => {
+
     const fetchServices = async () => {
       try {
-        setLoading(true);
-        setError("");
+        const res = await AllServices ({});
 
-        // Get login token from localStorage
-        const token = localStorage.getItem("token");
+        if (res.data.success) {
+          setServices(res.data.data || []);
 
-        if (!token) {
-          setError("Please login first to load services.");
-          setServices([]);
-          return;
-        }
+          if (passedService) {
+            const passedName =
+              typeof passedService === "string"
+                ? passedService
+                : passedService?.serviceName || passedService?.name;
 
-        const response = await axios.post(
-          "http://localhost:2000/api/service/all",
-          {},
-          {
-            headers: {
-              Authorization: token,
-            },
-          }
-        );
+            const matched = res.data.data.find(
+              (item) => item.serviceName === passedName
+            );
 
-        console.log("All Services:", response.data);
-
-        const serviceData = Array.isArray(response.data?.data)
-          ? response.data.data
-          : Array.isArray(response.data?.data?.services)
-          ? response.data.data.services
-          : Array.isArray(response.data?.services)
-          ? response.data.services
-          : [];
-
-        console.log("Services List:", serviceData);
-
-        // Display all services without status filter
-        setServices(serviceData);
-
-        // Automatically select passed service
-        if (passedService) {
-          const passedName =
-            typeof passedService === "string"
-              ? passedService
-              : passedService?.serviceName ||
-                passedService?.name ||
-                "";
-
-          const matchedService = serviceData.find(
-            (item) => item.serviceName === passedName
-          );
-
-          if (matchedService) {
-            setService(matchedService.serviceName);
+            if (matched) {
+              setService(matched.serviceName);
+            }
           }
         }
-      } catch (err) {
-        console.error("Service fetch error:", err);
 
-        setError(
-          err.response?.data?.message ||
-            "Unable to load services. Please try again."
-        );
+      } catch (error) {
+        console.log(error);
+        toast.error("Unable to load services");
       } finally {
         setLoading(false);
       }
     };
 
     fetchServices();
+
   }, []);
+
+  // Add appointment
+
+
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    if (!service) {
+      toast.error("Please select a service");
+      return;
+    }
+
+    if (!/^[6-9][0-9]{9}$/.test(phone)) {
+      toast.error("Enter valid 10 digit phone number");
+      return;
+    }
+
+    const selectedService = services.find(
+      (item) => item.serviceName === service
+    );
+
+    if (!selectedService) {
+      toast.error("Invalid service selected");
+      return;
+    }
+
+    try {
+
+      setBooking(true);
+
+      const data = {
+        name,
+        phone,
+        serviceId: selectedService._id,
+        serviceName: selectedService.serviceName,
+        date,
+        time
+      };
+
+      const res = await addappointment(data);
+
+      if (res.data.success) {
+
+        toast.success("Appointment booked successfully!");
+       
+
+        setName("");
+        setPhone("");
+        setService("");
+        setDate("");
+        setTime("");
+
+         nav("/")
+
+      } else {
+        toast.error(res.data.message || "Appointment not added");
+      }
+
+    } catch (error) {
+      console.log(error);
+
+      toast.error(
+        error.response?.data?.message || "Something went wrong!"
+      );
+
+    } finally {
+      setBooking(false);
+    }
+  };
 
   return (
     <>
@@ -104,7 +141,7 @@ export default function BookAppointment() {
           min-height: 100vh;
           padding: 35px 6%;
           color: #382b20;
-          font-family: inherit;
+          font-family: Arial, sans-serif;
         }
 
         .booking-title {
@@ -116,12 +153,11 @@ export default function BookAppointment() {
           color: #a77943;
           font-size: 12px;
           letter-spacing: 3px;
-          font-weight: 600;
         }
 
         .booking-title h1 {
           font-family: Georgia, serif;
-          font-size: 42px;
+          font-size: 38px;
           font-weight: 500;
           margin: 12px 0;
         }
@@ -170,7 +206,7 @@ export default function BookAppointment() {
         }
 
         .service-card {
-          padding: 22px 15px;
+          padding: 20px 15px;
           border: 1px solid #eadbc9;
           border-radius: 13px;
           background: #fffaf3;
@@ -191,22 +227,15 @@ export default function BookAppointment() {
         }
 
         .service-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 43px;
-          height: 43px;
-          border-radius: 50%;
-          background: #efe0ca;
+          display: block;
+          font-size: 24px;
+          margin-bottom: 12px;
           color: #87531f;
-          font-size: 23px;
-          margin-bottom: 15px;
         }
 
         .service-card h3 {
           font-size: 15px;
           margin: 0 0 10px;
-          font-weight: 600;
         }
 
         .service-price {
@@ -215,12 +244,18 @@ export default function BookAppointment() {
           font-weight: 600;
         }
 
+        .service-duration {
+          display: block;
+          color: #81766c;
+          font-size: 12px;
+          margin-top: 5px;
+        }
+
         .selected-label {
           display: block;
           color: #87531f;
           font-size: 11px;
           margin-top: 9px;
-          min-height: 14px;
         }
 
         .booking-field {
@@ -244,14 +279,12 @@ export default function BookAppointment() {
           outline: none;
           background: #fffefa;
           color: #382b20;
-          font-family: inherit;
           font-size: 13px;
         }
 
         .booking-field input:focus,
         .booking-field select:focus {
           border-color: #b78143;
-          box-shadow: 0 0 0 3px #b781431a;
         }
 
         .booking-summary {
@@ -260,7 +293,6 @@ export default function BookAppointment() {
           padding: 15px;
           display: flex;
           justify-content: space-between;
-          gap: 10px;
           margin: 20px 0;
           font-size: 13px;
         }
@@ -277,11 +309,9 @@ export default function BookAppointment() {
           border-radius: 8px;
           background: #b78143;
           color: white;
-          font-family: inherit;
           font-size: 15px;
           font-weight: 600;
           cursor: pointer;
-          transition: .2s;
         }
 
         .booking-button:hover {
@@ -289,55 +319,17 @@ export default function BookAppointment() {
         }
 
         .booking-button:disabled {
-          opacity: 0.6;
+          opacity: .6;
           cursor: not-allowed;
         }
 
-        .booking-success {
-          background: #eff7eb;
-          border: 1px solid #c8dfc2;
-          border-radius: 9px;
-          color: #315c2b;
-          padding: 14px;
-          margin-bottom: 20px;
-          font-size: 13px;
-          line-height: 1.6;
-        }
-
-        .booking-loading,
-        .booking-error,
         .booking-empty {
-          padding: 18px;
+          padding: 20px;
           text-align: center;
-          border-radius: 9px;
-          font-size: 13px;
-          grid-column: 1 / -1;
-        }
-
-        .booking-loading,
-        .booking-empty {
           background: #f8eddd;
           color: #81766c;
-        }
-
-        .booking-error {
-          background: #fff0ed;
-          color: #a33b2b;
-        }
-
-        .service-duration {
-          display: block;
-          color: #81766c;
-          font-size: 12px;
-          margin-top: 5px;
-        }
-
-        .booking-note {
-          color: #81766c;
-          font-size: 11px;
-          text-align: center;
-          line-height: 1.6;
-          margin-top: 13px;
+          border-radius: 8px;
+          grid-column: 1 / -1;
         }
 
         @media (max-width: 800px) {
@@ -350,7 +342,7 @@ export default function BookAppointment() {
           }
 
           .booking-title h1 {
-            font-size: 34px;
+            font-size: 32px;
           }
         }
 
@@ -367,6 +359,7 @@ export default function BookAppointment() {
       `}</style>
 
       <main className="booking-page">
+
         <div className="booking-title">
           <span>BEAUTY & GLOW SALON</span>
           <h1>Book Your Appointment</h1>
@@ -376,8 +369,10 @@ export default function BookAppointment() {
         </div>
 
         <div className="booking-layout">
-          {/* Service Section */}
+
+          {/* Services */}
           <section className="booking-section">
+
             <h2>Choose Your Service</h2>
 
             <p className="booking-subtitle">
@@ -385,33 +380,29 @@ export default function BookAppointment() {
             </p>
 
             <div className="service-cards">
+
               {loading ? (
-                <div className="booking-loading">
+                <div className="booking-empty">
                   Loading services...
-                </div>
-              ) : error ? (
-                <div className="booking-error">
-                  {error}
                 </div>
               ) : services.length === 0 ? (
                 <div className="booking-empty">
-                  No services are available right now.
+                  No services available.
                 </div>
               ) : (
                 services.map((item) => (
+
                   <button
                     type="button"
-                    key={item._id || item.autoId || item.serviceName}
+                    key={item._id}
                     className={
                       service === item.serviceName
                         ? "service-card selected"
                         : "service-card"
                     }
-                    onClick={() => {
-                      setService(item.serviceName);
-                      setSuccess(false);
-                    }}
+                    onClick={() => setService(item.serviceName)}
                   >
+
                     <span className="service-icon">✦</span>
 
                     <h3>{item.serviceName}</h3>
@@ -431,76 +422,43 @@ export default function BookAppointment() {
                         ? "✓ Selected"
                         : "Select service"}
                     </span>
+
                   </button>
                 ))
               )}
+
             </div>
           </section>
 
           {/* Booking Form */}
           <section className="booking-form">
+
             <h2>Your Details</h2>
 
             <p className="booking-subtitle">
               Complete the form to continue.
             </p>
 
-            {success && (
-              <div className="booking-success" role="status">
-                <strong>✓ Form submitted successfully!</strong>
-                <br />
-                This is a demo. Your appointment has not been saved or
-                sent to the salon.
-              </div>
-            )}
+            <form onSubmit={handleSubmit}>
 
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-
-                if (!service) {
-                  alert("Please select a service card first.");
-                  return;
-                }
-
-                if (!/^[6-9][0-9]{9}$/.test(phone)) {
-                  alert("Enter a valid 10-digit Indian mobile number.");
-                  return;
-                }
-
-                setSuccess(true);
-              }}
-            >
               <div className="booking-field">
-                <label htmlFor="booking-date">
-                  Appointment Date *
-                </label>
+                <label>Appointment Date *</label>
 
                 <input
-                  id="booking-date"
                   type="date"
                   value={date}
                   min={new Date().toLocaleDateString("en-CA")}
-                  onChange={(event) => {
-                    setDate(event.target.value);
-                    setSuccess(false);
-                  }}
+                  onChange={(e) => setDate(e.target.value)}
                   required
                 />
               </div>
 
               <div className="booking-field">
-                <label htmlFor="booking-time">
-                  Appointment Time *
-                </label>
+                <label>Appointment Time *</label>
 
                 <select
-                  id="booking-time"
                   value={time}
-                  onChange={(event) => {
-                    setTime(event.target.value);
-                    setSuccess(false);
-                  }}
+                  onChange={(e) => setTime(e.target.value)}
                   required
                 >
                   <option value="">Choose time</option>
@@ -513,7 +471,7 @@ export default function BookAppointment() {
                     "02:00 PM",
                     "03:00 PM",
                     "04:00 PM",
-                    "05:00 PM",
+                    "05:00 PM"
                   ].map((slot) => (
                     <option key={slot} value={slot}>
                       {slot}
@@ -523,47 +481,33 @@ export default function BookAppointment() {
               </div>
 
               <div className="booking-field">
-                <label htmlFor="booking-name">Full Name *</label>
+                <label>Full Name *</label>
 
                 <input
-                  id="booking-name"
                   type="text"
                   placeholder="Enter your full name"
                   value={name}
-                  onChange={(event) => {
-                    setName(event.target.value);
-                    setSuccess(false);
-                  }}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
 
               <div className="booking-field">
-                <label htmlFor="booking-phone">
-                  Phone Number *
-                </label>
+                <label>Phone Number *</label>
 
                 <input
-                  id="booking-phone"
                   type="tel"
                   placeholder="10-digit mobile number"
                   value={phone}
                   maxLength={10}
-                  inputMode="numeric"
+                  onChange={(e) => setPhone(e.target.value)}
                   pattern="[6-9][0-9]{9}"
-                  onChange={(event) => {
-                    setPhone(event.target.value);
-                    setSuccess(false);
-                  }}
                   required
                 />
               </div>
 
-              {/* Booking Summary */}
               <div className="booking-summary">
-                <span>
-                  {service || "No service selected"}
-                </span>
+                <span>{service || "No service selected"}</span>
 
                 <strong>
                   ₹
@@ -578,19 +522,19 @@ export default function BookAppointment() {
               <button
                 className="booking-button"
                 type="submit"
-                disabled={loading || services.length === 0}
+                disabled={booking || loading || services.length === 0}
               >
-                Book Appointment
+                {booking ? "Booking..." : "Book Appointment"}
               </button>
 
-              <p className="booking-note">
-                Service details are loaded from your backend.
-                Appointment submission is not connected yet.
-              </p>
             </form>
+
           </section>
+
         </div>
       </main>
     </>
   );
 }
+
+export default BookAppointment;

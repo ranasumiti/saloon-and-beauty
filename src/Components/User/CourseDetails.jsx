@@ -1,8 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { AllCourse } from "../../services/AdminService";
-import { toast } from "react-toastify";
+import { Updatecoure } from "../../services/AdminService";
+
+
+
 
 export default function CourseDetails() {
 
@@ -15,51 +17,46 @@ export default function CourseDetails() {
     fetchcourse();
   }, [id]);
 
-  const fetchcourse = async () => {
+  const fetchcourse = async() => {
     try {
       setLoading(true);
+      setCourse(null);
 
-      const res = await AllCourse({});
+      const res = await Updatecoure ({});
 
-      console.log("All Courses:", res.data);
+      console.log("Courses:", res.data);
 
-      if (res.data.success === true) {
-
-        const selectedCourse = res.data.data.find(
-          (item) => item._id === id
-        );
-
-        if (selectedCourse) {
-          setCourse(selectedCourse);
-        } else {
-          setCourse(null);
-          toast.error("Course not found");
-        }
-
-      } else {
-        setCourse(null);
-        toast.error("Unable to load course");
-      }
-
-    } catch (error) {
-      console.log("Course Error:", error);
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
+      
+    if (res.data.success) {
+      setCourse(res.data.data);
+    } else {
+      setService(null);
     }
-  };
+
+  } catch (error) {
+    console.log("course Error:", error.message);
+    setCourse(null);
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
-    return <div className="course-details-message">Loading course...</div>;
-  }
+  return (
+    <div className="course-loader">
+      <div className="course-spinner"></div>
+      <p>Preparing Your Experience...</p>
+    </div>
+  );
+}
 
-  if (!course) {
-    return <div className="course-details-message">
-      Course not found.
-      <br />
-      <Link to="/beauty">Back to Courses</Link>
-    </div>;
-  }
+if (!course) {
+  return <h2>course Not Found</h2>;
+}
+       
+
+ 
 
   return (
     <div className="course-details">
