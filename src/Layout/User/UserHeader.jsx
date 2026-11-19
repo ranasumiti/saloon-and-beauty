@@ -6,6 +6,8 @@ export default function UserHeader() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => !!localStorage.getItem("token")
   );
@@ -15,7 +17,6 @@ export default function UserHeader() {
       setIsLoggedIn(!!localStorage.getItem("token"));
     };
 
-    // Check token whenever page/route changes
     updateLoginStatus();
 
     window.addEventListener("authChanged", updateLoginStatus);
@@ -25,6 +26,10 @@ export default function UserHeader() {
       window.removeEventListener("authChanged", updateLoginStatus);
       window.removeEventListener("storage", updateLoginStatus);
     };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setMenuOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -39,43 +44,89 @@ export default function UserHeader() {
     navigate("/login");
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <>
-      <header className="bg-header">
-        <Link to="/" className="bg-logo">
-          <span className="bg-logo-icon">❋</span>
+      <header className="elora-header">
 
-          <span className="bg-logo-text">
-            <strong>Beauty &amp; Glow</strong>
-            <small>BEAUTY SALON &amp; ACADEMY</small>
-          </span>
+        {/* LOGO */}
+        <Link to="/" className="elora-logo" onClick={closeMenu}>
+          <img src="/images/Logo.png" alt="Elora Beauty Academy" />
         </Link>
 
-        <nav className="bg-nav">
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-          <Link to="/services">Services</Link>
-          <Link to="/beauty">Courses</Link>
-         
-          <Link to="/contact">Contact</Link>
+        {/* MOBILE TOGGLE */}
+        <button
+          className="elora-toggle"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
+          type="button"
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
+
+        {/* NAVIGATION */}
+        <nav className={`elora-nav ${menuOpen ? "show-menu" : ""}`}>
+
+          {[
+            { name: "Home", path: "/" },
+            { name: "About", path: "/about" },
+            { name: "Services", path: "/services" },
+            { name: "Courses", path: "/beauty" },
+            { name: "Contact", path: "/contact" }
+          ].map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={location.pathname === item.path ? "active" : ""}
+              onClick={closeMenu}
+            >
+              {item.name}
+            </Link>
+          ))}
+
+          {/* MOBILE ACTIONS */}
+          <div className="elora-mobile-actions">
+            {isLoggedIn ? (
+              <button onClick={handleLogout} className="elora-book-btn">
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="elora-login"
+                  onClick={closeMenu}
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="elora-book-btn"
+                  onClick={closeMenu}
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
 
-        <div className="bg-header-actions">
+        {/* DESKTOP ACTIONS */}
+        <div className="elora-actions">
           {isLoggedIn ? (
-            <button
-              type="button"
-              className="bg-login-btn"
-              onClick={handleLogout}
-            >
+            <button onClick={handleLogout} className="elora-book-btn">
               Logout
             </button>
           ) : (
             <>
-              <Link to="/login" className="bg-login-btn">
+              <Link to="/login" className="elora-login">
                 Login
               </Link>
 
-              <Link to="/register" className="bg-register-btn">
+              <Link to="/register" className="elora-book-btn">
                 Register
               </Link>
             </>
@@ -84,284 +135,397 @@ export default function UserHeader() {
       </header>
 
       <style>{`
-        .bg-header,
-        .bg-header * {
+
+        /* =========================
+           GLOBAL HEADER
+        ========================= */
+
+        .elora-header,
+        .elora-header * {
           box-sizing: border-box;
+    
         }
 
-        .bg-header {
-          width: 100%;
-          min-height: 82px;
-          padding: 12px 3.5%;
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          align-items: center;
-          column-gap: 28px;
-          background: #fbf7ef;
-          border-bottom: 1px solid #eee3d4;
-          position: relative;
-          z-index: 100;
-        }
+              body {
+  padding-top: 80px;
+}
+        
 
-        /* LOGO */
+.elora-header {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 4%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 
-        .bg-logo {
-          display: inline-flex;
+  background: #fbf5ec;
+  border-bottom: 1px solid #e8d9c6;
+  box-shadow: 0 7px 20px rgba(74,48,30,0.10);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+}
+
+        /* =========================
+           LOGO
+        ========================= */
+
+        .elora-logo {
+          display: flex;
           align-items: center;
-          gap: 10px;
+          flex-shrink: 0;
           text-decoration: none;
-          color: #503b38;
-          min-width: 0;
         }
 
-        .bg-logo-icon {
-          color: #b89563;
-          font-size: 39px;
-          line-height: 1;
+        .elora-logo img {
+          width: 220px;
+          height: 65px;
+          object-fit: contain;
+          display: block;
+        }
+
+        /* =========================
+           NAVIGATION
+        ========================= */
+
+        .elora-nav {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          flex: 1;
+        }
+
+        .elora-nav a {
+          text-decoration: none;
+          color: #493529;
+          font-family: Georgia, serif;
+          font-size: 16px;
+          font-weight: 500;
+          padding: 11px 14px;
+          border-radius: 30px;
+          white-space: nowrap;
+          transition: all 0.3s ease;
+        }
+
+        .elora-nav a:hover,
+        .elora-nav a.active {
+          background: #ead2a6;
+          color: #3e291c;
+        }
+
+        /* =========================
+           LOGIN / REGISTER BUTTONS
+        ========================= */
+
+        .elora-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
           flex-shrink: 0;
         }
 
-        .bg-logo-text {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .bg-logo-text strong {
-          font-family: Georgia, "Times New Roman", serif;
-          font-size: 26px;
-          font-weight: 500;
-          font-style: italic;
-          letter-spacing: -0.7px;
-          line-height: 1.1;
-          white-space: nowrap;
-        }
-
-        .bg-logo-text small {
-          font-family: Arial, sans-serif;
-          font-size: 8px;
-          letter-spacing: 1.8px;
-          color: #79675a;
-          white-space: nowrap;
-        }
-
-        /* NAVIGATION */
-
-        .bg-nav {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: clamp(12px, 1.6vw, 24px);
-          min-width: 0;
-        }
-
-        .bg-nav a {
-          position: relative;
-          padding: 8px 0;
-          text-decoration: none;
-          color: #493c35;
-          font-family: Arial, sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          white-space: nowrap;
-          transition: color 0.25s ease;
-        }
-
-        .bg-nav a::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          bottom: 2px;
-          width: 0;
-          height: 1px;
-          background: #b89563;
-          transition: width 0.25s ease;
-        }
-
-        .bg-nav a:hover {
-          color: #a6814c;
-        }
-
-        .bg-nav a:hover::after {
-          width: 100%;
-        }
-
-        /* HEADER BUTTONS */
-
-        .bg-header-actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 8px;
-          white-space: nowrap;
-        }
-
-        .bg-login-btn,
-        .bg-register-btn,
-        .bg-appointment-btn {
-          min-height: 40px;
-          padding: 0 13px;
+        .elora-book-btn,
+        .elora-login {
+          min-height: 42px;
+          padding: 0 20px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          border-radius: 3px;
-          text-decoration: none;
-          font-family: Arial, sans-serif;
-          font-size: 12px;
-          font-weight: 600;
-          transition:
-            background 0.25s ease,
-            color 0.25s ease,
-            border-color 0.25s ease;
-        }
 
-        .bg-login-btn {
-          color: #503b38;
-          border: 1px solid #c9aa80;
+          color: #58371f;
           background: transparent;
+          border: 1px solid #b89462;
+          border-radius: 30px;
+
+          font-family: Georgia, serif;
+          font-size: 15px;
+          text-decoration: none;
           cursor: pointer;
+          transition: all 0.3s ease;
         }
 
-        .bg-login-btn:hover {
-          background: #efe4d5;
+        .elora-book-btn {
+          background: #58371f;
+          color: #fffaf3;
         }
 
-        .bg-register-btn {
-          color: #503b38;
-          border: 1px solid #e6d8c7;
-          background: #fffdf9;
+        .elora-book-btn:hover {
+          background: #b89462;
+          border-color: #b89462;
+          color: white;
         }
 
-        .bg-register-btn:hover {
-          border-color: #c9aa80;
-          background: #f4ebdf;
+        .elora-login:hover {
+          background: #ead2a6;
+          color: #3e291c;
         }
 
-        .bg-appointment-btn {
-          min-height: 42px;
-          padding: 0 16px;
-          color: #fff;
-          border: 1px solid #b89563;
-          background: #b89563;
+        /* =========================
+           MOBILE TOGGLE
+        ========================= */
+
+        .elora-toggle {
+          display: none;
+          background: #58371f;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 7px 12px;
+          font-size: 23px;
+          cursor: pointer;
+          line-height: 1.2;
         }
 
-        .bg-appointment-btn:hover {
-          background: #503b38;
-          border-color: #503b38;
+        .elora-mobile-actions {
+          display: none;
         }
 
-        .bg-appointment-btn span {
-          font-size: 17px;
-          transition: transform 0.25s ease;
-        }
+        /* =========================
+           LAPTOP
+           1200px - 1440px+
+        ========================= */
 
-        .bg-appointment-btn:hover span {
-          transform: translateX(3px);
-        }
+        @media (min-width: 1200px) {
 
-        /* TABLETS AND SMALL LAPTOPS */
-
-        @media (max-width: 1150px) {
-          .bg-header {
-            grid-template-columns: 1fr auto;
-            gap: 12px 20px;
-            padding: 13px 3%;
+          .elora-header {
+            min-height: 85px;
+            padding: 8px 5%;
           }
 
-          .bg-nav {
-            grid-column: 1 / -1;
-            grid-row: 2;
-            padding: 7px 0 2px;
-            gap: 24px;
+          .elora-logo img {
+            width: 240px;
+            height: 68px;
           }
 
-          .bg-header-actions {
-            grid-column: 2;
-            grid-row: 1;
+          .elora-nav {
+            gap: 12px;
+          }
+
+          .elora-nav a {
+            font-size: 16px;
+            padding: 12px 15px;
           }
         }
 
-        /* MOBILE */
+        /* =========================
+           SMALL LAPTOP
+           1025px - 1199px
+        ========================= */
 
-        @media (max-width: 650px) {
-          .bg-header {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            gap: 15px;
-            padding: 15px 14px;
+        @media (min-width: 1025px) and (max-width: 1199px) {
+
+          .elora-header {
+            padding: 8px 2%;
+            gap: 10px;
           }
 
-          .bg-logo {
-            justify-self: center;
+          .elora-logo img {
+            width: 185px;
+            height: 60px;
           }
 
-          .bg-logo-icon {
-            font-size: 36px;
+          .elora-nav {
+            gap: 2px;
           }
 
-          .bg-logo-text strong {
-            font-size: 25px;
+          .elora-nav a {
+            font-size: 14px;
+            padding: 10px 9px;
           }
 
-          .bg-nav {
-            grid-column: 1;
-            grid-row: auto;
+          .elora-book-btn,
+          .elora-login {
+            padding: 0 14px;
+            font-size: 14px;
+          }
+        }
+
+        /* =========================
+           TABLET
+           769px - 1024px
+        ========================= */
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+
+          .elora-header {
+            min-height: 75px;
+            padding: 8px 3%;
+            gap: 10px;
+          }
+
+          .elora-logo img {
+            width: 160px;
+            height: 55px;
+          }
+
+          .elora-nav {
+            gap: 0;
+          }
+
+          .elora-nav a {
+            font-size: 13px;
+            padding: 9px 7px;
+          }
+
+          .elora-book-btn,
+          .elora-login {
+            min-height: 38px;
+            padding: 0 11px;
+            font-size: 13px;
+          }
+        }
+
+        /* =========================
+           MOBILE
+           481px - 768px
+        ========================= */
+
+        @media (max-width: 768px) {
+
+          .elora-header {
+            min-height: 72px;
+            padding: 7px 20px;
+            justify-content: space-between;
+            gap: 10px;
+          }
+
+          .elora-logo img {
+            width: 175px;
+            height: 58px;
+          }
+
+          .elora-toggle {
+            display: block;
+            flex-shrink: 0;
+          }
+
+          .elora-actions {
+            display: none;
+          }
+
+          .elora-nav {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
             width: 100%;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px 19px;
-            padding: 0;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 3px;
+
+            padding: 15px 20px 20px;
+            background: #fbf5ec;
+            border-top: 1px solid #e8d9c6;
+            box-shadow: 0 10px 18px rgba(74,48,30,0.12);
           }
 
-          .bg-nav a {
-            font-size: 12px;
+          .elora-nav.show-menu {
+            display: flex;
           }
 
-          .bg-header-actions {
-            grid-column: 1;
-            grid-row: auto;
-            justify-content: center;
-            flex-wrap: wrap;
+          .elora-nav > a {
             width: 100%;
+            text-align: center;
+            padding: 12px;
+            font-size: 16px;
           }
 
-          .bg-login-btn,
-          .bg-register-btn,
-          .bg-appointment-btn {
-            min-height: 39px;
-            padding: 0 12px;
-            font-size: 12px;
+          .elora-mobile-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding-top: 12px;
+            border-top: 1px solid #e8d9c6;
+            margin-top: 8px;
+          }
+
+          .elora-mobile-actions a,
+          .elora-mobile-actions button {
+            width: 85%;
+            max-width: 250px;
+            min-height: 42px;
           }
         }
+
+        /* =========================
+           SMALL MOBILE
+           361px - 480px
+        ========================= */
+
+        @media (max-width: 480px) {
+
+          .elora-header {
+            min-height: 65px;
+            padding: 6px 14px;
+          }
+
+          .elora-logo img {
+            width: 145px;
+            height: 50px;
+          }
+
+          .elora-toggle {
+            font-size: 21px;
+            padding: 7px 10px;
+          }
+
+          .elora-nav {
+            padding: 12px 15px 18px;
+          }
+
+          .elora-nav > a {
+            font-size: 15px;
+            padding: 11px;
+          }
+
+          .elora-mobile-actions a,
+          .elora-mobile-actions button {
+            font-size: 14px;
+          }
+        }
+
+        /* =========================
+           EXTRA SMALL MOBILE
+           320px - 360px
+        ========================= */
 
         @media (max-width: 360px) {
-          .bg-logo-text strong {
-            font-size: 23px;
+
+          .elora-header {
+            min-height: 60px;
+            padding: 5px 10px;
+            gap: 5px;
           }
 
-          .bg-logo-text small {
-            font-size: 7px;
-            letter-spacing: 1.3px;
+          .elora-logo img {
+            width: 125px;
+            height: 45px;
           }
 
-          .bg-nav {
-            gap: 8px 14px;
+          .elora-toggle {
+            font-size: 19px;
+            padding: 6px 9px;
           }
 
-          .bg-header-actions {
-            gap: 6px;
+          .elora-nav {
+            padding: 10px 12px 15px;
           }
 
-          .bg-login-btn,
-          .bg-register-btn {
-            padding: 0 10px;
-          }
-
-          .bg-appointment-btn {
-            padding: 0 11px;
+          .elora-nav > a {
+            font-size: 14px;
+            padding: 10px;
           }
         }
+
       `}</style>
     </>
   );

@@ -1,7 +1,8 @@
 
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Updatecoure } from "../../services/AdminService";
+import { useParams, Link } from "react-router-dom"
+import { Singlecourse } from "../../services/AdminService";
+
 
 
 
@@ -22,7 +23,7 @@ export default function CourseDetails() {
       setLoading(true);
       setCourse(null);
 
-      const res = await Updatecoure ({});
+      const res = await Singlecourse ({_id: id });
 
       console.log("Courses:", res.data);
 
@@ -30,7 +31,7 @@ export default function CourseDetails() {
     if (res.data.success) {
       setCourse(res.data.data);
     } else {
-      setService(null);
+      setCourse(null);
     }
 
   } catch (error) {
