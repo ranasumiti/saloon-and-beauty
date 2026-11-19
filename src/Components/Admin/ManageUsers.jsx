@@ -1,44 +1,61 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { GetAllUsers } from "../../services/AdminService";
 
 export default function ManageUsers() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Priya Sharma",
-      email: "priya@gmail.com",
-      phone: "9876543210",
-      joined: "2026-10-12",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Simran Kaur",
-      email: "simran@gmail.com",
-      phone: "9876501234",
-      joined: "2026-10-15",
-      status: "Active",
-    },
-    {
-      
-      id: 3,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "9876512345",
-      joined: "2026-10-18",
-      status: "Inactive",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // GET ALL USERS FROM BACKEND
+  const getUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await GetAllUsers();
+
+      if (response.data.success) {
+        // Only customer users (userType 2)
+        const customerUsers = response.data.data
+          .filter((user) => Number(user.userType) === 2)
+          .map((user) => ({
+            ...user,
+            status: user.status === true ? "Active" : "Inactive",
+          }));
+
+        setUsers(customerUsers);
+      } else {
+        setError(response.data.message || "Unable to load users");
+      }
+    } catch (err) {
+      console.error("Get Users Error:", err);
+      setError(
+        err.response?.data?.message || "Something went wrong while loading users."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getUsers();
+  }, []);
+
+  // SEARCH AND STATUS FILTER
   const filteredUsers = users.filter((user) => {
+    const name = (user.name || "").toLowerCase();
+    const email = (user.email || "").toLowerCase();
+    const phone = String(user.phone || "");
+
     const matchesSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase()) ||
-      user.phone.includes(search);
+      name.includes(search.toLowerCase()) ||
+      email.includes(search.toLowerCase()) ||
+      phone.includes(search);
 
     const matchesStatus =
       statusFilter === "All" || user.status === statusFilter;
@@ -46,10 +63,11 @@ export default function ManageUsers() {
     return matchesSearch && matchesStatus;
   });
 
+  // LOCAL STATUS CHANGE ONLY
   const toggleStatus = (id) => {
     setUsers((previousUsers) =>
       previousUsers.map((user) =>
-        user.id === id
+        user._id === id
           ? {
               ...user,
               status: user.status === "Active" ? "Inactive" : "Active",
@@ -59,12 +77,24 @@ export default function ManageUsers() {
     );
   };
 
+  // LOCAL DELETE ONLY
   const deleteUser = (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       setUsers((previousUsers) =>
-        previousUsers.filter((user) => user.id !== id)
+        previousUsers.filter((user) => user._id !== id)
       );
     }
+  };
+
+  // DATE FORMAT
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -338,6 +368,7 @@ export default function ManageUsers() {
         </div>
       </div>
 
+      {/* Statistics */}
       <div className="users-stats">
         <div className="users-stat-card">
           <p>Total Users</p>
@@ -346,15 +377,20 @@ export default function ManageUsers() {
 
         <div className="users-stat-card">
           <p>Active Users</p>
-          <h3>{users.filter((user) => user.status === "Active").length}</h3>
+          <h3>
+            {users.filter((user) => user.status === "Active").length}
+          </h3>
         </div>
 
         <div className="users-stat-card">
           <p>Inactive Users</p>
-          <h3>{users.filter((user) => user.status === "Inactive").length}</h3>
+          <h3>
+            {users.filter((user) => user.status === "Inactive").length}
+          </h3>
         </div>
       </div>
 
+      {/* Users Table */}
       <div className="users-list-card">
         <div className="users-list-top">
           <h3>All Users</h3>
@@ -395,21 +431,33 @@ export default function ManageUsers() {
             </thead>
 
             <tbody>
-              {filteredUsers.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="users-empty">
+                    Loading users...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="users-empty">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user, index) => (
-                  <tr key={user.id}>
+                  <tr key={user._id}>
                     <td>{index + 1}</td>
 
                     <td>
                       <span className="user-avatar">
-                        {user.name.charAt(0).toUpperCase()}
+                        {(user.name || "U").charAt(0).toUpperCase()}
                       </span>
-                      {user.name}
+                      {user.name || "N/A"}
                     </td>
 
-                    <td>{user.email}</td>
-                    <td>{user.phone}</td>
-                    <td>{user.joined}</td>
+                    <td>{user.email || "N/A"}</td>
+                    <td>{user.phone || "N/A"}</td>
+                    <td>{formatDate(user.createdAt)}</td>
 
                     <td>
                       <span
@@ -432,7 +480,7 @@ export default function ManageUsers() {
 
                         <button
                           className="user-action-btn user-toggle-btn"
-                          onClick={() => toggleStatus(user.id)}
+                          onClick={() => toggleStatus(user._id)}
                         >
                           {user.status === "Active"
                             ? "Deactivate"
@@ -441,7 +489,7 @@ export default function ManageUsers() {
 
                         <button
                           className="user-action-btn user-delete-btn"
-                          onClick={() => deleteUser(user.id)}
+                          onClick={() => deleteUser(user._id)}
                         >
                           Delete
                         </button>
@@ -461,6 +509,7 @@ export default function ManageUsers() {
         </div>
       </div>
 
+      {/* User Details Modal */}
       {selectedUser && (
         <div
           className="user-modal-backdrop"
@@ -471,10 +520,13 @@ export default function ManageUsers() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3>User Details</h3>
-            <p><strong>Name:</strong> {selectedUser.name}</p>
-            <p><strong>Email:</strong> {selectedUser.email}</p>
-            <p><strong>Phone:</strong> {selectedUser.phone}</p>
-            <p><strong>Joined:</strong> {selectedUser.joined}</p>
+
+            <p><strong>Name:</strong> {selectedUser.name || "N/A"}</p>
+            <p><strong>Email:</strong> {selectedUser.email || "N/A"}</p>
+            <p><strong>Phone:</strong> {selectedUser.phone || "N/A"}</p>
+            <p>
+              <strong>Joined:</strong> {formatDate(selectedUser.createdAt)}
+            </p>
             <p><strong>Status:</strong> {selectedUser.status}</p>
 
             <button

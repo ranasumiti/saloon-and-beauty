@@ -1,54 +1,69 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { GetAllUsers } from "../../services/AdminService";
 
 export default function ManageStudents() {
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: "Amandeep Kaur",
-      email: "aman@gmail.com",
-      phone: "9876543210",
-      course: "Professional Makeup",
-      enrollmentDate: "2026-08-10",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Simran Sharma",
-      email: "simran@gmail.com",
-      phone: "9876543211",
-      course: "Hair Styling",
-      enrollmentDate: "2026-09-05",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Manpreet Kaur",
-      email: "manpreet@gmail.com",
-      phone: "9876543212",
-      course: "Skin Care",
-      enrollmentDate: "2026-09-15",
-      status: "Inactive",
-    },
-  ]);
-
+  const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // GET ALL STUDENTS FROM API
+  const getStudents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await GetAllUsers();
+
+      if (response.data.success) {
+        const studentData = response.data.data
+          .filter((item) => Number(item.userType) === 3)
+          .map((item) => ({
+            ...item,
+            course: item.course || "N/A",
+            enrollmentDate: item.createdAt
+              ? new Date(item.createdAt).toLocaleDateString("en-IN")
+              : "N/A",
+            status: item.status ? "Active" : "Inactive",
+          }));
+
+        setStudents(studentData);
+      } else {
+        setError(response.data.message || "Students not found");
+      }
+    } catch (error) {
+      console.log("Get Students Error:", error);
+      setError(
+        error.response?.data?.message || "Failed to load students"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // USE EFFECT
+  useEffect(() => {
+    getStudents();
+  }, []);
+
+  // COURSES
   const courses = [
     ...new Set(students.map((student) => student.course)),
   ];
 
+  // SEARCH AND FILTER
   const filteredStudents = students.filter((student) => {
     const searchText = search.toLowerCase();
 
     const matchesSearch =
-      student.name.toLowerCase().includes(searchText) ||
-      student.email.toLowerCase().includes(searchText) ||
-      student.phone.includes(search) ||
-      student.course.toLowerCase().includes(searchText);
+      (student.name || "").toLowerCase().includes(searchText) ||
+      (student.email || "").toLowerCase().includes(searchText) ||
+      (student.phone || "").includes(search) ||
+      (student.course || "").toLowerCase().includes(searchText);
 
     const matchesCourse =
       selectedCourse === "All" || student.course === selectedCourse;
@@ -56,10 +71,11 @@ export default function ManageStudents() {
     return matchesSearch && matchesCourse;
   });
 
+  // TOGGLE STATUS (FRONTEND ONLY)
   const toggleStatus = (id) => {
     setStudents((previousStudents) =>
       previousStudents.map((student) =>
-        student.id === id
+        student._id === id
           ? {
               ...student,
               status:
@@ -70,22 +86,24 @@ export default function ManageStudents() {
     );
 
     setSelectedStudent((previous) =>
-      previous?.id === id
+      previous?._id === id
         ? {
             ...previous,
-            status: previous.status === "Active" ? "Inactive" : "Active",
+            status:
+              previous.status === "Active" ? "Inactive" : "Active",
           }
         : previous
     );
   };
 
+  // DELETE STUDENT (FRONTEND ONLY)
   const deleteStudent = (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       setStudents((previousStudents) =>
-        previousStudents.filter((student) => student.id !== id)
+        previousStudents.filter((student) => student._id !== id)
       );
 
-      if (selectedStudent?.id === id) {
+      if (selectedStudent?._id === id) {
         setSelectedStudent(null);
       }
     }
@@ -514,9 +532,9 @@ export default function ManageStudents() {
 
             <tbody>
               {filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td>{student.id}</td>
+                filteredStudents.map((student, index) => (
+                  <tr key={student._id}>
+                    <td>{index + 1}</td>
                     <td className="student-name">{student.name}</td>
                     <td>{student.email}</td>
                     <td>{student.phone}</td>
@@ -546,7 +564,7 @@ export default function ManageStudents() {
                         </button>
 
                         <Link
-                          to={`/admin/editstudent/${student.id}`}
+                          to={`/admin/editstudent/${student._id}`}
                           className="student-action-btn student-edit-btn"
                         >
                           Edit
@@ -555,7 +573,7 @@ export default function ManageStudents() {
                         <button
                           type="button"
                           className="student-action-btn student-toggle-btn"
-                          onClick={() => toggleStatus(student.id)}
+                          onClick={() => toggleStatus(student._id)}
                         >
                           {student.status === "Active"
                             ? "Deactivate"
@@ -565,7 +583,7 @@ export default function ManageStudents() {
                         <button
                           type="button"
                           className="student-action-btn student-delete-btn"
-                          onClick={() => deleteStudent(student.id)}
+                          onClick={() => deleteStudent(student._id)}
                         >
                           Delete
                         </button>

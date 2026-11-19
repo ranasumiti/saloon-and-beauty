@@ -1,55 +1,73 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { GetAllUsers } from "../../services/AdminService";
 
 export default function ManageBeauticians() {
-  const [beauticians, setBeauticians] = useState([
-    {
-      id: 1,
-      name: "Priya Sharma",
-      email: "priya@gmail.com",
-      phone: "9876543210",
-      specialization: "Makeup",
-      experience: "5 Years",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Neha Verma",
-      email: "neha@gmail.com",
-      phone: "9876543211",
-      specialization: "Hair Styling",
-      experience: "3 Years",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Simran Kaur",
-      email: "simran@gmail.com",
-      phone: "9876543212",
-      specialization: "Skin Care",
-      experience: "2 Years",
-      status: "Inactive",
-    },
-  ]);
+  const [beauticians, setBeauticians] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
   const [selectedSpecialization, setSelectedSpecialization] =
     useState("All");
   const [selectedBeautician, setSelectedBeautician] = useState(null);
 
+  // GET ALL BEAUTICIANS FROM BACKEND
+  const getBeauticians = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await GetAllUsers();
+
+      if (response.data.success) {
+        const beauticianData = response.data.data
+          .filter((item) => Number(item.userType) === 4)
+          .map((item) => ({
+            ...item,
+            status: item.status === true ? "Active" : "Inactive",
+            specialization: item.specialization || "N/A",
+            experience: item.experience || "N/A",
+          }));
+
+        setBeauticians(beauticianData);
+      } else {
+        setError(response.data.message || "Unable to load beauticians");
+      }
+    } catch (err) {
+      console.error("Beautician Error:", err);
+      setError(
+        err.response?.data?.message ||
+          "Something went wrong while loading beauticians."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getBeauticians();
+  }, []);
+
+  // SPECIALIZATION FILTER OPTIONS
   const specializations = [
-    ...new Set(beauticians.map((item) => item.specialization)),
+    ...new Set(
+      beauticians
+        .map((item) => item.specialization)
+        .filter((item) => item && item !== "N/A")
+    ),
   ];
 
+  // SEARCH AND FILTER
   const filteredBeauticians = beauticians.filter((item) => {
     const searchText = search.toLowerCase();
 
     const matchesSearch =
-      item.name.toLowerCase().includes(searchText) ||
-      item.email.toLowerCase().includes(searchText) ||
-      item.phone.includes(search) ||
-      item.specialization.toLowerCase().includes(searchText);
+      (item.name || "").toLowerCase().includes(searchText) ||
+      (item.email || "").toLowerCase().includes(searchText) ||
+      String(item.phone || "").includes(search) ||
+      (item.specialization || "").toLowerCase().includes(searchText);
 
     const matchesSpecialization =
       selectedSpecialization === "All" ||
@@ -58,10 +76,11 @@ export default function ManageBeauticians() {
     return matchesSearch && matchesSpecialization;
   });
 
+  // LOCAL STATUS CHANGE ONLY
   const toggleStatus = (id) => {
     setBeauticians((previous) =>
       previous.map((item) =>
-        item.id === id
+        item._id === id
           ? {
               ...item,
               status:
@@ -70,18 +89,37 @@ export default function ManageBeauticians() {
           : item
       )
     );
+
+    if (selectedBeautician?._id === id) {
+      setSelectedBeautician((previous) => ({
+        ...previous,
+        status: previous.status === "Active" ? "Inactive" : "Active",
+      }));
+    }
   };
 
+  // LOCAL DELETE ONLY
   const deleteBeautician = (id) => {
     if (window.confirm("Are you sure you want to delete this beautician?")) {
       setBeauticians((previous) =>
-        previous.filter((item) => item.id !== id)
+        previous.filter((item) => item._id !== id)
       );
 
-      if (selectedBeautician?.id === id) {
+      if (selectedBeautician?._id === id) {
         setSelectedBeautician(null);
       }
     }
+  };
+
+  // DATE FORMAT
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -448,6 +486,7 @@ export default function ManageBeauticians() {
           </Link>
         </div>
 
+        {/* Statistics */}
         <div className="beautician-stats">
           <div className="beautician-stat-card">
             <h3>{beauticians.length}</h3>
@@ -469,6 +508,7 @@ export default function ManageBeauticians() {
           </div>
         </div>
 
+        {/* Search and Filter */}
         <div className="beautician-filters">
           <input
             type="text"
@@ -491,6 +531,7 @@ export default function ManageBeauticians() {
           </select>
         </div>
 
+        {/* Beautician Table */}
         <div className="beautician-table-wrapper">
           <table className="beautician-table">
             <thead>
@@ -507,17 +548,29 @@ export default function ManageBeauticians() {
             </thead>
 
             <tbody>
-              {filteredBeauticians.length > 0 ? (
-                filteredBeauticians.map((beautician) => (
-                  <tr key={beautician.id}>
-                    <td>{beautician.id}</td>
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="beautician-empty">
+                    Loading beauticians...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="8" className="beautician-empty">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredBeauticians.length > 0 ? (
+                filteredBeauticians.map((beautician, index) => (
+                  <tr key={beautician._id}>
+                    <td>{index + 1}</td>
 
                     <td className="beautician-name">
-                      {beautician.name}
+                      {beautician.name || "N/A"}
                     </td>
 
-                    <td>{beautician.email}</td>
-                    <td>{beautician.phone}</td>
+                    <td>{beautician.email || "N/A"}</td>
+                    <td>{beautician.phone || "N/A"}</td>
                     <td>{beautician.specialization}</td>
                     <td>{beautician.experience}</td>
 
@@ -544,7 +597,7 @@ export default function ManageBeauticians() {
                         </button>
 
                         <Link
-                          to={`/admin/editbeautician/${beautician.id}`}
+                          to={`/admin/editbeautician/${beautician._id}`}
                           className="beautician-action-btn beautician-edit-btn"
                         >
                           Edit
@@ -553,7 +606,7 @@ export default function ManageBeauticians() {
                         <button
                           type="button"
                           className="beautician-action-btn beautician-toggle-btn"
-                          onClick={() => toggleStatus(beautician.id)}
+                          onClick={() => toggleStatus(beautician._id)}
                         >
                           {beautician.status === "Active"
                             ? "Deactivate"
@@ -563,7 +616,7 @@ export default function ManageBeauticians() {
                         <button
                           type="button"
                           className="beautician-action-btn beautician-delete-btn"
-                          onClick={() => deleteBeautician(beautician.id)}
+                          onClick={() => deleteBeautician(beautician._id)}
                         >
                           Delete
                         </button>
@@ -582,6 +635,7 @@ export default function ManageBeauticians() {
           </table>
         </div>
 
+        {/* Beautician Details Modal */}
         {selectedBeautician && (
           <div
             className="beautician-modal-overlay"
@@ -594,15 +648,15 @@ export default function ManageBeauticians() {
               <h3>Beautician Details</h3>
 
               <p className="beautician-detail">
-                <strong>Name:</strong> {selectedBeautician.name}
+                <strong>Name:</strong> {selectedBeautician.name || "N/A"}
               </p>
 
               <p className="beautician-detail">
-                <strong>Email:</strong> {selectedBeautician.email}
+                <strong>Email:</strong> {selectedBeautician.email || "N/A"}
               </p>
 
               <p className="beautician-detail">
-                <strong>Phone:</strong> {selectedBeautician.phone}
+                <strong>Phone:</strong> {selectedBeautician.phone || "N/A"}
               </p>
 
               <p className="beautician-detail">
@@ -612,6 +666,11 @@ export default function ManageBeauticians() {
 
               <p className="beautician-detail">
                 <strong>Experience:</strong> {selectedBeautician.experience}
+              </p>
+
+              <p className="beautician-detail">
+                <strong>Joined:</strong>{" "}
+                {formatDate(selectedBeautician.createdAt)}
               </p>
 
               <p className="beautician-detail">
