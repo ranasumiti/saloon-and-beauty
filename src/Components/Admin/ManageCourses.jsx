@@ -45,7 +45,7 @@ export default function ManageCourses() {
   const filteredCourses = courses.filter((item) => {
 
     const matchesSearch =
-      (item.title || "").toLowerCase().includes(search.toLowerCase()) ||
+      (item.courseName || "").toLowerCase().includes(search.toLowerCase()) ||
       (item.category || "").toLowerCase().includes(search.toLowerCase());
 
     const matchesCategory =
@@ -444,7 +444,7 @@ const deletecourse = async (id) => {
                     <td>{course.duration}</td>
 
                     <td>
-                      ₹{Number(course.price || 0).toLocaleString("en-IN")}
+                     ₹{Number(course.fee || 0).toLocaleString("en-IN")}
                     </td>
 
                     <td>
