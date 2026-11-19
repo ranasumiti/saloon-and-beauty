@@ -25,6 +25,7 @@ const [beauticians, setBeauticians] = useState([]);
   }, []);
 
 
+
   const fetchBeauticians = async () => {
   try {
     const res = await AllBeauticians({});
@@ -36,6 +37,7 @@ const [beauticians, setBeauticians] = useState([]);
     console.log(error);
   }
 };
+
   const fetchcategory = async () => {
     try {
       const res = await AllCategory({});
