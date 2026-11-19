@@ -32,6 +32,9 @@ export const ALLADDAPOINTMENT="/appointment/all";
 export const UPDATEADDAPOINTMENT="/appointment/update";
 export const SOFTDELETEADDAPOINTMENT="/appointment/softdelete";
 
+//beauticians
+
+
 
 
 // Category API

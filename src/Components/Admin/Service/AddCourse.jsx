@@ -4,6 +4,8 @@ import { Courseadd, AllCategory } from "../../../services/AdminService";
 import { toast } from "react-toastify";
 
 export default function AddCourse() {
+ 
+const [beauticians, setBeauticians] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [fee, setFee] = useState("");
@@ -19,8 +21,21 @@ export default function AddCourse() {
   // Fetch categories when component loads
   useEffect(() => {
     fetchcategory();
+    fetchBeauticians();
   }, []);
 
+
+  const fetchBeauticians = async () => {
+  try {
+    const res = await AllBeauticians({});
+
+    if (res.data.success) {
+      setBeauticians(res.data.data);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
   const fetchcategory = async () => {
     try {
       const res = await AllCategory({});
@@ -229,15 +244,21 @@ export default function AddCourse() {
                 </div>
 
                 <div className="course-field">
-                  <label>Instructor User ID</label>
+  <label>Select Instructor</label>
 
-                  <input
-                    type="text"
-                    value={trainerId}
-                    onChange={(e) => setTrainerId(e.target.value)}
-                    placeholder="Enter instructor MongoDB ID"
-                  />
-                </div>
+  <select
+    value={trainerId}
+    onChange={(e) => setTrainerId(e.target.value)}
+  >
+    <option value="">Select Instructor</option>
+
+    {beauticians.map((item) => (
+      <option key={item._id} value={item._id}>
+        {item.name} - {item.email}
+      </option>
+    ))}
+  </select>
+</div>
 
                 <div className="course-field">
                   <label>Course Status</label>
