@@ -102,7 +102,7 @@ const nav = useNavigate();
         time
       };
 
-      const res = await addappointment(data);
+      const res = await addappointment (data);
 
       if (res.data.success) {
 
@@ -125,7 +125,9 @@ const nav = useNavigate();
       console.log(error);
 
       toast.error(
-        error.response?.data?.message || "Something went wrong!"
+        error.response?.data?.message ||
+    error.message ||
+    "Something went wrong!"
       );
 
     } finally {

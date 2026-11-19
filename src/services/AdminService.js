@@ -19,6 +19,8 @@ import {
   ALLADDAPOINTMENT,
   UPDATEADDAPOINTMENT,
   SOFTDELETEADDAPOINTMENT,
+  CUSTOMER_BASE_URL,
+  
 } from "../endpoints";
 
 function getToken() {
@@ -83,7 +85,7 @@ export function Updatecoure(data) {
 // appointments
 
 export function addappointment(data) {
-  return axios.post(ADMIN_BASE_URL + ADDAPOINTMENT, data, getToken());
+  return axios.post(CUSTOMER_BASE_URL + ADDAPOINTMENT, data, getToken());
 }
 export function allappointment(data) {
   return axios.post(ADMIN_BASE_URL + ALLADDAPOINTMENT, data, getToken());
