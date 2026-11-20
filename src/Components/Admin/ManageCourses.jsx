@@ -467,17 +467,6 @@ const deletecourse = async (id) => {
                           Edit
                         </Link>
 
-                         <button
-            className="course-action-btn"
-            style={{
-                background: course.status ? "#fff0dc" : "#e8f4e9",
-                color: course.status ? "#a66b20" : "#347343"
-            }}
-            onClick={() => toggleCourseStatus(course)}
-        >
-            {course.status ? "Deactivate" : "Activate"}
-        </button>
-
         
 <button
             className="course-action-btn"

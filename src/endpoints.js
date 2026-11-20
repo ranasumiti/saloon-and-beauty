@@ -38,4 +38,5 @@ export const ALLCATEGORY = "/all";
 // User APIs
 export const ALLUSERS = "/user/all";
 
-
+// Instructor / Beautician API
+export const INSTRUCTORS = "/user/instructors";

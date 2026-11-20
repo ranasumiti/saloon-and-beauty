@@ -9,8 +9,7 @@ export default function ManageBeauticians() {
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
-  const [selectedSpecialization, setSelectedSpecialization] =
-    useState("All");
+  const [selectedSpecialization, setSelectedSpecialization] =useState("All");
   const [selectedBeautician, setSelectedBeautician] = useState(null);
 
   // GET ALL BEAUTICIANS FROM BACKEND
@@ -26,7 +25,7 @@ export default function ManageBeauticians() {
           .filter((item) => Number(item.userType) === 4)
           .map((item) => ({
             ...item,
-            status: item.status === true ? "Active" : "Inactive",
+            status: item.status === true ? "Accepted" : "Rejected",
             specialization: item.specialization || "N/A",
             experience: item.experience || "N/A",
           }));
@@ -76,7 +75,7 @@ export default function ManageBeauticians() {
     return matchesSearch && matchesSpecialization;
   });
 
-  // LOCAL STATUS CHANGE ONLY
+  // LOCAL ACCEPT / REJECT
   const toggleStatus = (id) => {
     setBeauticians((previous) =>
       previous.map((item) =>
@@ -84,7 +83,7 @@ export default function ManageBeauticians() {
           ? {
               ...item,
               status:
-                item.status === "Active" ? "Inactive" : "Active",
+                item.status === "Accepted" ? "Rejected" : "Accepted",
             }
           : item
       )
@@ -93,12 +92,13 @@ export default function ManageBeauticians() {
     if (selectedBeautician?._id === id) {
       setSelectedBeautician((previous) => ({
         ...previous,
-        status: previous.status === "Active" ? "Inactive" : "Active",
+        status:
+          previous.status === "Accepted" ? "Rejected" : "Accepted",
       }));
     }
   };
 
-  // LOCAL DELETE ONLY
+  // LOCAL DELETE
   const deleteBeautician = (id) => {
     if (window.confirm("Are you sure you want to delete this beautician?")) {
       setBeauticians((previous) =>
@@ -291,12 +291,12 @@ export default function ManageBeauticians() {
           font-weight: 600;
         }
 
-        .beautician-status.active {
+        .beautician-status.accepted {
           background: #e8f4e9;
           color: #347343;
         }
 
-        .beautician-status.inactive {
+        .beautician-status.rejected {
           background: #f5e8e4;
           color: #a34d3f;
         }
@@ -330,15 +330,6 @@ export default function ManageBeauticians() {
 
         .beautician-view-btn:hover {
           background: #dfd0bb;
-        }
-
-        .beautician-edit-btn {
-          background: #f4e8d7;
-          color: #78552e;
-        }
-
-        .beautician-edit-btn:hover {
-          background: #e8d3b8;
         }
 
         .beautician-toggle-btn {
@@ -472,6 +463,7 @@ export default function ManageBeauticians() {
       `}</style>
 
       <div className="manage-beauticians">
+
         <div className="beautician-header">
           <div>
             <h2>Manage Beauticians</h2>
@@ -486,8 +478,9 @@ export default function ManageBeauticians() {
           </Link>
         </div>
 
-        {/* Statistics */}
+        {/* STATISTICS */}
         <div className="beautician-stats">
+
           <div className="beautician-stat-card">
             <h3>{beauticians.length}</h3>
             <p>Total Beauticians</p>
@@ -495,21 +488,27 @@ export default function ManageBeauticians() {
 
           <div className="beautician-stat-card">
             <h3>
-              {beauticians.filter((item) => item.status === "Active").length}
+              {beauticians.filter(
+                (item) => item.status === "Accepted"
+              ).length}
             </h3>
-            <p>Active Beauticians</p>
+            <p>Accepted Beauticians</p>
           </div>
 
           <div className="beautician-stat-card">
             <h3>
-              {beauticians.filter((item) => item.status === "Inactive").length}
+              {beauticians.filter(
+                (item) => item.status === "Rejected"
+              ).length}
             </h3>
-            <p>Inactive Beauticians</p>
+            <p>Rejected Beauticians</p>
           </div>
+
         </div>
 
-        {/* Search and Filter */}
+        {/* SEARCH AND FILTER */}
         <div className="beautician-filters">
+
           <input
             type="text"
             placeholder="Search name, email, phone or specialization..."
@@ -529,11 +528,14 @@ export default function ManageBeauticians() {
               </option>
             ))}
           </select>
+
         </div>
 
-        {/* Beautician Table */}
+        {/* BEAUTICIAN TABLE */}
         <div className="beautician-table-wrapper">
+
           <table className="beautician-table">
+
             <thead>
               <tr>
                 <th>#</th>
@@ -541,28 +543,30 @@ export default function ManageBeauticians() {
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Specialization</th>
-                <th>Experience</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
+
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="beautician-empty">
+                  <td colSpan="7" className="beautician-empty">
                     Loading beauticians...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="8" className="beautician-empty">
+                  <td colSpan="7" className="beautician-empty">
                     {error}
                   </td>
                 </tr>
               ) : filteredBeauticians.length > 0 ? (
+
                 filteredBeauticians.map((beautician, index) => (
                   <tr key={beautician._id}>
+
                     <td>{index + 1}</td>
 
                     <td className="beautician-name">
@@ -570,16 +574,17 @@ export default function ManageBeauticians() {
                     </td>
 
                     <td>{beautician.email || "N/A"}</td>
+
                     <td>{beautician.phone || "N/A"}</td>
+
                     <td>{beautician.specialization}</td>
-                    <td>{beautician.experience}</td>
 
                     <td>
                       <span
                         className={
-                          beautician.status === "Active"
-                            ? "beautician-status active"
-                            : "beautician-status inactive"
+                          beautician.status === "Accepted"
+                            ? "beautician-status accepted"
+                            : "beautician-status rejected"
                         }
                       >
                         {beautician.status}
@@ -588,6 +593,7 @@ export default function ManageBeauticians() {
 
                     <td>
                       <div className="beautician-actions">
+
                         <button
                           type="button"
                           className="beautician-action-btn beautician-view-btn"
@@ -596,21 +602,14 @@ export default function ManageBeauticians() {
                           View
                         </button>
 
-                        <Link
-                          to={`/admin/editbeautician/${beautician._id}`}
-                          className="beautician-action-btn beautician-edit-btn"
-                        >
-                          Edit
-                        </Link>
-
                         <button
                           type="button"
                           className="beautician-action-btn beautician-toggle-btn"
                           onClick={() => toggleStatus(beautician._id)}
                         >
-                          {beautician.status === "Active"
-                            ? "Deactivate"
-                            : "Activate"}
+                          {beautician.status === "Accepted"
+                            ? "Rejected"
+                            : "Accepted"}
                         </button>
 
                         <button
@@ -620,22 +619,28 @@ export default function ManageBeauticians() {
                         >
                           Delete
                         </button>
+
                       </div>
                     </td>
+
                   </tr>
                 ))
+
               ) : (
                 <tr>
-                  <td colSpan="8" className="beautician-empty">
+                  <td colSpan="7" className="beautician-empty">
                     No beauticians found.
                   </td>
                 </tr>
               )}
+
             </tbody>
+
           </table>
+
         </div>
 
-        {/* Beautician Details Modal */}
+        {/* BEAUTICIAN DETAILS MODAL */}
         {selectedBeautician && (
           <div
             className="beautician-modal-overlay"
@@ -645,6 +650,7 @@ export default function ManageBeauticians() {
               className="beautician-modal"
               onClick={(e) => e.stopPropagation()}
             >
+
               <h3>Beautician Details</h3>
 
               <p className="beautician-detail">
@@ -684,9 +690,11 @@ export default function ManageBeauticians() {
               >
                 Close
               </button>
+
             </div>
           </div>
         )}
+
       </div>
     </>
   );

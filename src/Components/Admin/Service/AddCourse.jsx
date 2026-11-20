@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Courseadd, AllCategory } from "../../../services/AdminService";
+import { Courseadd,AllCategory,GetAllInstructors} from "../../../services/AdminService";
 import { toast } from "react-toastify";
 
 export default function AddCourse() {
- 
-const [beauticians, setBeauticians] = useState([]);
+  const [beauticians, setBeauticians] = useState([]);
+  const [loadingInstructors, setLoadingInstructors] = useState(false);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [fee, setFee] = useState("");
@@ -18,43 +19,56 @@ const [beauticians, setBeauticians] = useState([]);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  // Fetch categories when component loads
+  // Fetch categories and instructors
   useEffect(() => {
     fetchcategory();
     fetchBeauticians();
   }, []);
 
-
-
+  // Fetch Beauticians / Instructors
   const fetchBeauticians = async () => {
-  try {
-    const res = await AllBeauticians({});
+    try {
+      setLoadingInstructors(true);
 
-    if (res.data.success) {
-      setBeauticians(res.data.data);
+      const res = await GetAllInstructors();
+
+      console.log("Instructor Response:", res.data);
+
+      if (res.data.success) {
+        setBeauticians(res.data.data || []);
+      } else {
+        setBeauticians([]);
+        toast.error(res.data.message || "Instructors not found");
+      }
+    } catch (error) {
+      console.log("Instructor Error:", error);
+      toast.error(
+        error.response?.data?.message || "Unable to load instructors"
+      );
+    } finally {
+      setLoadingInstructors(false);
     }
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
 
+  // Fetch Categories
   const fetchcategory = async () => {
     try {
-      const res = await AllCategory({});
+      const res = await AllCategory();
 
       console.log("Category Response:", res.data);
 
       if (res.data.success) {
-        setCategories(res.data.data);
+        setCategories(res.data.data || []);
       } else {
         toast.error("Categories not found");
       }
     } catch (error) {
-      console.log("Course Error:", error);
-      toast.error("Unable to load courses");
+      console.log("Category Error:", error);
+      toast.error("Unable to load categories");
     }
   };
 
+  // Submit Course
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -78,12 +92,15 @@ const [beauticians, setBeauticians] = useState([]);
     try {
       const formData = new FormData();
 
-      formData.append("courseName", name);
-      formData.append("description", description);
+      formData.append("courseName", name.trim());
+      formData.append("description", description.trim());
       formData.append("fee", Number(fee));
       formData.append("category", selectedCategory);
-      formData.append("duration", duration);
+      formData.append("duration", duration.trim());
+
+      // Save selected Beautician MongoDB ID
       formData.append("trainerId", trainerId);
+
       formData.append("status", status === "true");
       formData.append("certification", certification === "true");
       formData.append("image", image);
@@ -95,19 +112,7 @@ const [beauticians, setBeauticians] = useState([]);
       if (res.data.success) {
         toast.success("Course added successfully!");
 
-        setName("");
-        setDescription("");
-        setFee("");
-        setSelectedCategory("");
-        setDuration("");
-        setTrainerId("");
-        setStatus("true");
-        setCertification("true");
-        setImage(null);
-        setImagePreview("");
-
-        const fileInput = document.getElementById("courseImage");
-        if (fileInput) fileInput.value = "";
+        handleReset();
       } else {
         toast.error(res.data.message || "Course not added");
       }
@@ -120,6 +125,7 @@ const [beauticians, setBeauticians] = useState([]);
     }
   };
 
+  // Reset Form
   const handleReset = () => {
     setName("");
     setDescription("");
@@ -133,7 +139,10 @@ const [beauticians, setBeauticians] = useState([]);
     setImagePreview("");
 
     const fileInput = document.getElementById("courseImage");
-    if (fileInput) fileInput.value = "";
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   return (
@@ -174,6 +183,8 @@ const [beauticians, setBeauticians] = useState([]);
 
               <div className="course-fields">
 
+                {/* Course Name */}
+
                 <div className="course-field">
                   <label>Course Name *</label>
 
@@ -201,12 +212,17 @@ const [beauticians, setBeauticians] = useState([]);
                     <option value="">Select Category</option>
 
                     {categories.map((item) => (
-                      <option key={item._id} value={item.categoryName}>
+                      <option
+                        key={item._id}
+                        value={item.categoryName}
+                      >
                         {item.categoryName}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* Course Fee */}
 
                 <div className="course-field">
                   <label>Course Fee (₹) *</label>
@@ -221,6 +237,8 @@ const [beauticians, setBeauticians] = useState([]);
                   />
                 </div>
 
+                {/* Description */}
+
                 <div className="course-field full-width">
                   <label>Course Description *</label>
 
@@ -232,6 +250,8 @@ const [beauticians, setBeauticians] = useState([]);
                     required
                   />
                 </div>
+
+                {/* Duration */}
 
                 <div className="course-field">
                   <label>Duration *</label>
@@ -245,22 +265,37 @@ const [beauticians, setBeauticians] = useState([]);
                   />
                 </div>
 
+                {/* Instructor / Beautician Dropdown */}
+
                 <div className="course-field">
-  <label>Select Instructor</label>
+                  <label>Select Instructor</label>
 
-  <select
-    value={trainerId}
-    onChange={(e) => setTrainerId(e.target.value)}
-  >
-    <option value="">Select Instructor</option>
+                  <select
+                    value={trainerId}
+                    onChange={(e) => setTrainerId(e.target.value)}
+                    disabled={loadingInstructors}
+                  >
+                    <option value="">
+                      {loadingInstructors
+                        ? "Loading Instructors..."
+                        : "Select Instructor"}
+                    </option>
 
-    {beauticians.map((item) => (
-      <option key={item._id} value={item._id}>
-        {item.name} - {item.email}
-      </option>
-    ))}
-  </select>
-</div>
+                    {beauticians.map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.name} - {item.email}
+                      </option>
+                    ))}
+                  </select>
+
+                  {!loadingInstructors && beauticians.length === 0 && (
+                    <small style={{ color: "#b45309" }}>
+                      No active Beauticians available.
+                    </small>
+                  )}
+                </div>
+
+                {/* Course Status */}
 
                 <div className="course-field">
                   <label>Course Status</label>
@@ -273,6 +308,8 @@ const [beauticians, setBeauticians] = useState([]);
                     <option value="false">Inactive</option>
                   </select>
                 </div>
+
+                {/* Certification */}
 
                 <div className="course-field">
                   <label>Certification</label>
@@ -493,6 +530,11 @@ const [beauticians, setBeauticians] = useState([]);
           color: #543b2d;
           font: inherit;
           font-size: 14px;
+        }
+
+        .course-field select:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
         }
 
         .course-field textarea {

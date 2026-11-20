@@ -1,70 +1,146 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AddServices } from "../../../services/AdminService";
 import { toast } from "react-toastify";
 
-
 export default function AddService() {
-  const [image, setImage] = useState();
-const [name,setName]=useState("");
-const [category,setCategory]=useState("");
-const[price,setPrice]=useState("");
-const [duration, setduration] = useState("");
-const[description,setDescription]=useState("");
-const[status,setstatus]=useState("true");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState("");
+  const [duration, setDuration] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("true");
+  const [loading, setLoading] = useState(false);
 
+  const fileInputRef = useRef(null);
 
-const handleSubmit= async(e)=>{
-  e.preventDefault();
+  // Preview URL cleanup
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
-    if (!image) {
-    alert("Please select an image");
-    return;
-  }
+  // Image select handler
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
+    if (!file) return;
 
-  const formData=new FormData();
-  formData.append("serviceName",name);
-  formData.append("image",image);
-  formData.append("category",category);
-  formData.append("price",price);
-  formData.append("duration",duration);
-  formData.append("description",description);
-  formData.append("status",status);
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image!");
+      e.target.value = "";
+      return;
+    }
 
- try {
-  const res = await AddServices(formData);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5 MB!");
+      e.target.value = "";
+      return;
+    }
 
-  if (res.data.success) {
-    toast.success("Service added successfully!");
+    const previewURL = URL.createObjectURL(file);
 
+    setImage(file);
+    setImagePreview(previewURL);
+  };
+
+  // Reset form
+  const resetForm = () => {
     setName("");
     setImage(null);
+    setImagePreview("");
     setCategory("");
     setPrice("");
-    setduration("");
+    setDuration("");
     setDescription("");
-    setstatus("true");
-  } else {
-    toast.error(res.data.message || "Service not added");
-  }
+    setStatus("true");
 
-} catch (err) {
-  console.log(err);
-  toast.error("Something went wrong!");
-}
-  
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
+  // Submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
+    if (!name.trim()) {
+      toast.error("Please enter service name");
+      return;
+    }
 
-}
+    if (!category) {
+      toast.error("Please select service category");
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error("Please enter service description");
+      return;
+    }
+
+    if (!price || Number(price) < 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    if (!duration.trim()) {
+      toast.error("Please enter service duration");
+      return;
+    }
+
+    if (!image) {
+      toast.error("Please select service image");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("serviceName", name.trim());
+    formData.append("image", image);
+    formData.append("category", category);
+    formData.append("price", price);
+    formData.append("duration", duration.trim());
+    formData.append("description", description.trim());
+    formData.append("status", status);
+
+    try {
+      setLoading(true);
+
+      const res = await AddServices(formData);
+
+      console.log("ADD SERVICE RESPONSE:", res.data);
+
+      if (res.data.success) {
+        toast.success("Service added successfully!");
+        resetForm();
+      } else {
+        toast.error(res.data.message || "Service not added");
+      }
+    } catch (err) {
+      console.log("ADD SERVICE ERROR:", err);
+
+      toast.error(
+        err.response?.data?.message || "Something went wrong!"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="add-service-page">
       <div className="service-heading">
         <div>
-          <p className="service-breadcrumb">Home / Services / Add Service</p>
+          <p className="service-breadcrumb">
+            Home / Services / Add Service
+          </p>
           <h1>Add New Service</h1>
           <p>Create and manage your salon services.</p>
         </div>
@@ -78,136 +154,171 @@ const handleSubmit= async(e)=>{
         </button>
       </div>
 
-      <form className="service-form" onSubmit={handleSubmit} >
+      <form className="service-form" onSubmit={handleSubmit}>
         <div className="service-form-layout">
+
           {/* Main Form */}
           <div className="service-form-main">
+
             <section className="service-form-card">
               <h2>Service Information</h2>
+
               <p className="service-section-subtitle">
                 Enter the basic details of your salon service.
               </p>
 
               <div className="service-fields">
+
                 <div className="service-field">
                   <label>Service Name *</label>
+
                   <input
                     type="text"
                     value={name}
-                    onChange={(e)=>
-                      setName(e.target.value)
-                    }
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Bridal Makeup"
                   />
                 </div>
 
                 <div className="service-field">
                   <label>Service Category *</label>
-                  <select defaultValue=""
-                  
-                  type="text"
-                  value={category}
-                  onChange={(e)=>setCategory(e.target.value)}>
+
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
                     <option value="" disabled>
                       Select category
                     </option>
-                    <option>Skin Care</option>
-                    <option>Hair Care</option>
-                    <option>Makeup</option>
-                    <option>Nail Care</option>
-                    <option>Spa & Massage</option>
+
+                    <option value="Skin Care">Skin Care</option>
+                    <option value="Hair Care">Hair Care</option>
+                    <option value="Makeup">Makeup</option>
+                    <option value="Nail Care">Nail Care</option>
+                    <option value="Spa & Massage">Spa & Massage</option>
                   </select>
                 </div>
 
                 <div className="service-field full-width">
                   <label>Short Description *</label>
+
                   <textarea
                     rows="4"
                     value={description}
-  onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe the service..."
                   />
                 </div>
 
                 <div className="service-field">
                   <label>Price (₹) *</label>
+
                   <input
                     type="number"
                     min="0"
                     value={price}
-                    onChange={(e)=> setPrice(e.target.value)}
+                    onChange={(e) => setPrice(e.target.value)}
                     placeholder="Enter service price"
                   />
                 </div>
 
                 <div className="service-field">
-  <label>Service Duration *</label>
-  <input
-    type="text"
-    value={duration}
-    onChange={(e) => setduration(e.target.value)}
-    placeholder="e.g. 45 minutes"
-  />
-</div>
-                  
-                  
+                  <label>Service Duration *</label>
+
+                  <input
+                    type="text"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g. 45 minutes"
+                  />
+                </div>
 
                 <div className="service-field">
                   <label>Service Status</label>
+
                   <select
-  value={status}
-  onChange={(e) => setstatus(e.target.value)}
->
-  <option value="true">Active</option>
-  <option value="false">Inactive</option>
-</select>
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
                 </div>
 
-                
               </div>
             </section>
 
+            {/* Service Image */}
             <section className="service-form-card">
               <h2>Service Image</h2>
+
               <p className="service-section-subtitle">
                 Upload an image to display on your service page.
               </p>
 
-             <label className="service-upload-area">
-  <>
-    <span className="service-upload-icon">↑</span>
-    <strong>Upload service image</strong>
+              <label className="service-upload-area">
 
-    <span className="service-browse-btn">
-      Browse Image
-    </span>
-  </>
+                {imagePreview ? (
+                  <>
+                    <img
+                      src={imagePreview}
+                      alt="Service Preview"
+                    />
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => setImage(e.target.files[0])}
-  />
-</label>
+                    <strong>{image?.name}</strong>
+
+                    <span className="service-browse-btn">
+                      Change Image
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="service-upload-icon">
+                      ↑
+                    </span>
+
+                    <strong>Upload service image</strong>
+
+                    <span className="service-browse-btn">
+                      Browse Image
+                    </span>
+
+                    <span>PNG, JPG, JPEG (Max 5 MB)</span>
+                  </>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+
+              </label>
             </section>
           </div>
 
           {/* Side Preview */}
           <aside className="service-form-side">
+
             <section className="service-form-card service-preview">
               <h2>Quick Tips</h2>
+
               <div className="service-tip">
                 <span>✦</span>
                 <p>Use a clear, descriptive service name.</p>
               </div>
+
               <div className="service-tip">
                 <span>₹</span>
                 <p>Set a price that reflects your service.</p>
               </div>
+
               <div className="service-tip">
                 <span>◷</span>
                 <p>Choose an accurate appointment duration.</p>
               </div>
+
               <div className="service-tip">
                 <span>▧</span>
                 <p>Use a high-quality image for a professional look.</p>
@@ -216,26 +327,43 @@ const handleSubmit= async(e)=>{
 
             <section className="service-form-card service-preview">
               <h2>Before Publishing</h2>
+
               <p className="service-check">
                 <span>✓</span> Service details are correct
               </p>
+
               <p className="service-check">
                 <span>✓</span> Price and duration are set
               </p>
+
               <p className="service-check">
                 <span>✓</span> Image is clear
               </p>
             </section>
+
           </aside>
         </div>
 
+        {/* Footer Buttons */}
         <div className="service-form-footer">
-          <button className="service-cancel-btn" type="reset">
+
+          <button
+            className="service-cancel-btn"
+            type="button"
+            onClick={resetForm}
+            disabled={loading}
+          >
             Reset Form
           </button>
-          <button className="service-save-btn" type="submit">
-  Save Service
-</button>
+
+          <button
+            className="service-save-btn"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save Service"}
+          </button>
+
         </div>
       </form>
 
@@ -397,6 +525,7 @@ const handleSubmit= async(e)=>{
           width: 100%;
           max-height: 280px;
           object-fit: contain;
+          border-radius: 8px;
         }
 
         .service-upload-icon {
@@ -412,6 +541,7 @@ const handleSubmit= async(e)=>{
 
         .service-upload-area strong {
           font-size: 14px;
+          overflow-wrap: anywhere;
         }
 
         .service-upload-area > span:not(.service-upload-icon):not(.service-browse-btn) {
@@ -507,6 +637,12 @@ const handleSubmit= async(e)=>{
           color: white;
         }
 
+        .service-save-btn:disabled,
+        .service-cancel-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
         @media (max-width: 1000px) {
           .service-form-layout {
             grid-template-columns: minmax(0, 1fr);
@@ -556,4 +692,3 @@ const handleSubmit= async(e)=>{
     </div>
   );
 }
-

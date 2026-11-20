@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import {Singlecourse,Updatecoure} from "../../../services/AdminService";
 
 export default function EditCourse() {
   const { id } = useParams();
@@ -14,43 +15,61 @@ export default function EditCourse() {
   const [status, setStatus] = useState("true");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
+  // GET SINGLE COURSE
   useEffect(() => {
-    const savedCourses = JSON.parse(
-      localStorage.getItem("courses") || "[]"
-    );
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
 
-    const course = savedCourses.find(
-      (item) => String(item.id) === String(id)
-    );
+        const res = await Singlecourse({ _id: id });
 
-    if (course) {
-      setName(course.name || course.title || "");
-      setCategory(course.category || "");
-      setDuration(course.duration || "");
-      setPrice(course.price ?? "");
-      setDescription(course.description || "");
+        console.log("Single Course Response:", res.data);
 
-      setStatus(
-        course.status === false ||
-        course.status === "false" ||
-        course.status === "Inactive"
-          ? "false"
-          : "true"
-      );
-    } else {
-      toast.error("Course not found!");
+        if (res.data.success && res.data.data) {
+          const course = res.data.data;
+
+          setName(course.courseName || "");
+          setCategory(course.category || "");
+          setDuration(course.duration || "");
+          setPrice(course.fee ?? "");
+          setDescription(course.description || "");
+
+          setStatus(
+            course.status === false ||
+            course.status === "false" ||
+            course.status === "Inactive"
+              ? "false"
+              : "true"
+          );
+        } else {
+          toast.error(res.data.message || "Course not found!");
+        }
+      } catch (error) {
+        console.log("Fetch Course Error:", error);
+
+        toast.error(
+          error.response?.data?.message ||
+          "Unable to load course details"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCourse();
     }
-
-    setLoading(false);
   }, [id]);
 
-  const handleSubmit = (e) => {
+  // UPDATE COURSE
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
       !name.trim() ||
-      !category ||
+      !category.trim() ||
       price === "" ||
       !duration.trim()
     ) {
@@ -58,46 +77,51 @@ export default function EditCourse() {
       return;
     }
 
-    const savedCourses = JSON.parse(
-      localStorage.getItem("courses") || "[]"
-    );
-
-    const courseExists = savedCourses.some(
-      (item) => String(item.id) === String(id)
-    );
-
-    if (!courseExists) {
-      toast.error("Course not found!");
+    if (Number(price) < 0) {
+      toast.error("Price cannot be negative.");
       return;
     }
 
-    const updatedCourses = savedCourses.map((course) => {
-      if (String(course.id) === String(id)) {
-        return {
-          ...course,
-          name: name.trim(),
-          title: name.trim(),
-          category,
-          duration: duration.trim(),
-          price: Number(price),
-          description: description.trim(),
-          status: status === "true",
-        };
+    try {
+      setSaving(true);
+
+      const formData = {
+        _id: id,
+        courseName: name.trim(),
+        category: category.trim(),
+        duration: duration.trim(),
+        fee: Number(price),
+        description: description.trim(),
+        status: status === "true"
+      };
+
+      const res = await Updatecoure(formData);
+
+      console.log("Update Course Response:", res.data);
+
+      if (res.data.success) {
+        toast.success(
+          res.data.message || "Course updated successfully!"
+        );
+
+        setTimeout(() => {
+          navigate("/admin/courses");
+        }, 700);
+      } else {
+        toast.error(
+          res.data.message || "Unable to update course"
+        );
       }
+    } catch (error) {
+      console.log("Update Course Error:", error);
 
-      return course;
-    });
-
-    localStorage.setItem(
-      "courses",
-      JSON.stringify(updatedCourses)
-    );
-
-    toast.success("Course updated successfully!");
-
-    setTimeout(() => {
-      navigate("/admin/courses");
-    }, 700);
+      toast.error(
+        error.response?.data?.message ||
+        "Course update failed"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -236,12 +260,14 @@ export default function EditCourse() {
 
       <div className="edit-course-card">
         <h2>Edit Course</h2>
+
         <p className="edit-course-subtitle">
           Update your beauty course details.
         </p>
 
         <form onSubmit={handleSubmit}>
           <div className="edit-course-grid">
+
             <div className="edit-course-field">
               <label>Course Name *</label>
               <input
@@ -306,14 +332,16 @@ export default function EditCourse() {
                 placeholder="Enter course description"
               />
             </div>
+
           </div>
 
           <div className="edit-course-actions">
             <button
               type="submit"
               className="edit-course-save"
+              disabled={saving}
             >
-              Save Changes
+              {saving ? "Updating..." : "Save Changes"}
             </button>
 
             <button

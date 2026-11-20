@@ -20,7 +20,7 @@ export default function ManageStudents() {
       const response = await GetAllUsers();
 
       if (response.data.success) {
-        const studentData = response.data.data
+        const studentData = (response.data.data || [])
           .filter((item) => Number(item.userType) === 3)
           .map((item) => ({
             ...item,
@@ -28,7 +28,7 @@ export default function ManageStudents() {
             enrollmentDate: item.createdAt
               ? new Date(item.createdAt).toLocaleDateString("en-IN")
               : "N/A",
-            status: item.status ? "Active" : "Inactive",
+            status: item.status ? "Accepted" : "Rejected",
           }));
 
         setStudents(studentData);
@@ -79,7 +79,7 @@ export default function ManageStudents() {
           ? {
               ...student,
               status:
-                student.status === "Active" ? "Inactive" : "Active",
+                student.status === "Accepted" ? "Rejected" : "Accepted",
             }
           : student
       )
@@ -90,7 +90,7 @@ export default function ManageStudents() {
         ? {
             ...previous,
             status:
-              previous.status === "Active" ? "Inactive" : "Active",
+              previous.status === "Accepted" ? "Rejected" : "Accepted",
           }
         : previous
     );
@@ -280,12 +280,12 @@ export default function ManageStudents() {
           font-weight: 600;
         }
 
-        .student-status.active {
+        .student-status.accepted {
           background: #e8f4e9;
           color: #347343;
         }
 
-        .student-status.inactive {
+        .student-status.rejected {
           background: #f5e8e4;
           color: #a34d3f;
         }
@@ -472,6 +472,7 @@ export default function ManageStudents() {
           </Link>
         </div>
 
+        {/* Student Statistics */}
         <div className="student-stats">
           <div className="student-stat-card">
             <h3>{students.length}</h3>
@@ -480,19 +481,20 @@ export default function ManageStudents() {
 
           <div className="student-stat-card">
             <h3>
-              {students.filter((item) => item.status === "Active").length}
+              {students.filter((item) => item.status === "Accepted").length}
             </h3>
-            <p>Active Students</p>
+            <p>Accepted Students</p>
           </div>
 
           <div className="student-stat-card">
             <h3>
-              {students.filter((item) => item.status === "Inactive").length}
+              {students.filter((item) => item.status === "Rejected").length}
             </h3>
-            <p>Inactive Students</p>
+            <p>Rejected Students</p>
           </div>
         </div>
 
+        {/* Search and Course Filter */}
         <div className="student-filters">
           <input
             type="text"
@@ -515,6 +517,7 @@ export default function ManageStudents() {
           </select>
         </div>
 
+        {/* Students Table */}
         <div className="student-table-wrapper">
           <table className="student-table">
             <thead>
@@ -531,7 +534,19 @@ export default function ManageStudents() {
             </thead>
 
             <tbody>
-              {filteredStudents.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="student-empty">
+                    Loading students...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="8" className="student-empty">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredStudents.length > 0 ? (
                 filteredStudents.map((student, index) => (
                   <tr key={student._id}>
                     <td>{index + 1}</td>
@@ -544,9 +559,9 @@ export default function ManageStudents() {
                     <td>
                       <span
                         className={
-                          student.status === "Active"
-                            ? "student-status active"
-                            : "student-status inactive"
+                          student.status === "Accepted"
+                            ? "student-status accepted"
+                            : "student-status rejected"
                         }
                       >
                         {student.status}
@@ -563,21 +578,12 @@ export default function ManageStudents() {
                           View
                         </button>
 
-                        <Link
-                          to={`/admin/editstudent/${student._id}`}
-                          className="student-action-btn student-edit-btn"
-                        >
-                          Edit
-                        </Link>
-
                         <button
                           type="button"
                           className="student-action-btn student-toggle-btn"
                           onClick={() => toggleStatus(student._id)}
                         >
-                          {student.status === "Active"
-                            ? "Deactivate"
-                            : "Activate"}
+                          {student.status === "Accepted" ? "Rejected" : "Accepted"}
                         </button>
 
                         <button
@@ -602,6 +608,7 @@ export default function ManageStudents() {
           </table>
         </div>
 
+        {/* Student Details Modal */}
         {selectedStudent && (
           <div
             className="student-modal-overlay"

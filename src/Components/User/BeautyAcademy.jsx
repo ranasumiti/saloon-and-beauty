@@ -26,7 +26,6 @@ export default function BeautyAcademy() {
         setCourses([]);
         toast.error(res.data.message || "Unable to load courses");
       }
-
     } catch (error) {
       console.log("Course Error:", error.response?.data || error);
       toast.error("Unable to load courses");
@@ -95,8 +94,10 @@ export default function BeautyAcademy() {
                   Duration: {course.duration}
                 </small>
 
-                <Link to={`/coursedetails/${course._id}`}
-                   className="academy-course-button">
+                <Link
+                  to={`/coursedetails/${course._id}`}
+                  className="academy-course-button"
+                >
                   Explore Course <span>→</span>
                 </Link>
 
@@ -183,11 +184,13 @@ export default function BeautyAcademy() {
           line-height: 1.9;
         }
 
+        /* COURSE GRID - SAME AS SERVICES */
+
         .academy-course-grid {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 24px;
-          max-width: 1200px;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 20px;
+          max-width: 1400px;
           margin: auto;
         }
 
@@ -329,16 +332,21 @@ export default function BeautyAcademy() {
           background: var(--gold);
         }
 
+        /* TABLET */
+
         @media(max-width: 1100px) {
           .academy-course-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             max-width: 760px;
+            gap: 24px;
           }
 
           .academy-course-image {
             height: 250px;
           }
         }
+
+        /* MOBILE */
 
         @media(max-width: 550px) {
           .academy-courses {

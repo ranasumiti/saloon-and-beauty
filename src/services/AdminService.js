@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import {
   ADMIN_BASE_URL,
@@ -20,6 +19,7 @@ import {
   SOFTDELETEADDAPOINTMENT,
   CUSTOMER_BASE_URL,
   ALLUSERS,
+  INSTRUCTORS, // Added
 } from "../endpoints";
 
 function getToken() {
@@ -101,4 +101,9 @@ export function softdeleteappointment(data) {
 // User APIs
 export function GetAllUsers() {
   return axios.post(ADMIN_BASE_URL + ALLUSERS, {}, getToken());
+}
+
+// Instructor / Beautician API
+export function GetAllInstructors() {
+  return axios.post(ADMIN_BASE_URL + INSTRUCTORS, {}, getToken());
 }
